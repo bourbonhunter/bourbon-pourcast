@@ -35,5 +35,4 @@ jobs:
           git add .
           git commit -m "Auto-update: bourbon results" || echo "No changes to commit"
           git push https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }}
-      
-      
+
