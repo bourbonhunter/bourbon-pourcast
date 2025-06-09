@@ -1,0 +1,11 @@
+name: Restore Manual Trigger
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test echo
+        run: echo "Manual trigger is working!"
