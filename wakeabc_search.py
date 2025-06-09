@@ -18,14 +18,12 @@ output_html = "search_results.html"
 output_pdf = "bourbon_report.pdf"
 today = datetime.now().strftime("%B %d, %Y")
 
-# Setup Chrome for headless mode (important for GitHub Actions)
 chrome_options = Options()
 chrome_options.add_argument("--headless")
 chrome_options.add_argument("--disable-gpu")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 
-# Clear output files
 with open(output_txt, "w", encoding="utf-8") as f:
     f.write("Pour Decisions Pourcast\n" + "=" * 40 + "\n\n")
 
@@ -86,7 +84,7 @@ with open(output_html, "w", encoding="utf-8") as f:
       <h1>Pour Decisions Pourcast</h1>
       <p class="date"><em>{today}</em></p>
     </div>
-    <img src="logo 1.png" alt="Pour Decisions Logo" style="height: 300px; margin-left: 40px; border-radius: 6px;" />
+    <img src="logo.png" alt="Logo" style="height: 300px; margin-left: 40px;" />
   </header>
 """)
 
@@ -97,16 +95,25 @@ for term in search_terms:
         print(f"🔍 Searching for: {term}")
         driver.get("https://wakeabc.com/search-results/")
 
-        search_input = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.NAME, "productSearch"))
-        )
-        search_input.clear()
-        search_input.send_keys(term)
-        search_input.send_keys(Keys.RETURN)
+        try:
+            search_input = WebDriverWait(driver, 15).until(
+                EC.presence_of_element_located((By.NAME, "productSearch"))
+            )
+            search_input.clear()
+            search_input.send_keys(term)
+            search_input.send_keys(Keys.RETURN)
+        except:
+            print(f"❌ Search input not found for {term}")
+            continue
 
-        WebDriverWait(driver, 10).until(
-            EC.presence_of_all_elements_located((By.CLASS_NAME, "wake-product"))
-        )
+        try:
+            WebDriverWait(driver, 15).until(
+                EC.presence_of_all_elements_located((By.CLASS_NAME, "wake-product"))
+            )
+        except:
+            print(f"❌ Timeout waiting for products for {term}")
+            continue
+
         time.sleep(2)
 
         product_elements = driver.find_elements(By.CLASS_NAME, "wake-product")
@@ -174,7 +181,6 @@ for term in search_terms:
     except Exception:
         print("\n❌ Error encountered:")
         traceback.print_exc()
-
     finally:
         driver.quit()
 
@@ -183,5 +189,11 @@ with open(output_html, "a", encoding="utf-8") as f:
 
 print(f"\n✅ All searches complete. Results saved to:\n- {output_txt}\n- {output_html}")
 
-# Generate PDF
-pdfkit.from_file(output_html, output_pdf, configuration=pdfkit.configuration(wkhtmltopdf='/usr/bin/wkhtmltopdf'))
+options = {
+    'enable-local-file-access': '',
+    'disable-external-links': '',
+    'disable-smart-shrinking': ''
+}
+
+config = pdfkit.configuration(wkhtmltopdf='/usr/bin/wkhtmltopdf')
+pdfkit.from_file(output_html, output_pdf, configuration=config, options=options)
