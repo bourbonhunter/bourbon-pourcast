@@ -1,3 +1,4 @@
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -6,15 +7,23 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 import traceback
-import sys
 import os
 from datetime import datetime
+import pdfkit
 
 search_terms = ["Old Fitz", "Blanton", "Eagle Rare", "stagg", "Van Winkle", "king of kentucky", "parkers", "elmer", "taylor", "weller", "old forester", "michter", "blue note"]
 
 output_txt = "search_results.txt"
 output_html = "search_results.html"
+output_pdf = "bourbon_report.pdf"
 today = datetime.now().strftime("%B %d, %Y")
+
+# Setup Chrome for headless mode (important for GitHub Actions)
+chrome_options = Options()
+chrome_options.add_argument("--headless")
+chrome_options.add_argument("--disable-gpu")
+chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--disable-dev-shm-usage")
 
 # Clear output files
 with open(output_txt, "w", encoding="utf-8") as f:
@@ -82,7 +91,7 @@ with open(output_html, "w", encoding="utf-8") as f:
 """)
 
 for term in search_terms:
-    driver = webdriver.Chrome()
+    driver = webdriver.Chrome(options=chrome_options)
 
     try:
         print(f"🔍 Searching for: {term}")
@@ -109,71 +118,70 @@ for term in search_terms:
             if not product_elements:
                 txt.write("No results found.\n\n")
                 html.write("<tr><td colspan='4'>No results found.</td></tr>\n</table><hr>\n")
-                continue
+            else:
+                for product in product_elements:
+                    try:
+                        title = product.find_element(By.TAG_NAME, "h4").text.strip()
+                    except:
+                        title = "Unknown Title"
 
-            for product in product_elements:
-                try:
-                    title = product.find_element(By.TAG_NAME, "h4").text.strip()
-                except:
-                    title = "Unknown Title"
+                    try:
+                        price = product.find_element(By.CLASS_NAME, "price").text.strip()
+                    except:
+                        price = "Price not listed"
 
-                try:
-                    price = product.find_element(By.CLASS_NAME, "price").text.strip()
-                except:
-                    price = "Price not listed"
+                    try:
+                        size = product.find_element(By.CLASS_NAME, "size").text.strip()
+                    except:
+                        size = "Size not listed"
 
-                try:
-                    size = product.find_element(By.CLASS_NAME, "size").text.strip()
-                except:
-                    size = "Size not listed"
+                    result_txt = f"- {title}\n  Price: {price} | Size: {size}\n"
+                    stores_html = ""
+                    try:
+                        show_btn = product.find_element(By.CLASS_NAME, "collapse-heading")
+                        driver.execute_script("arguments[0].click();", show_btn)
+                        time.sleep(0.5)
 
-                result_txt = f"- {title}\n  Price: {price} | Size: {size}\n"
-                stores_html = ""
-                try:
-                    show_btn = product.find_element(By.CLASS_NAME, "collapse-heading")
-                    driver.execute_script("arguments[0].click();", show_btn)
-                    time.sleep(0.5)
+                        inventory_div = product.find_element(By.CLASS_NAME, "inventory-collapse")
+                        store_items = inventory_div.find_elements(By.TAG_NAME, "li")
 
-                    inventory_div = product.find_element(By.CLASS_NAME, "inventory-collapse")
-                    store_items = inventory_div.find_elements(By.TAG_NAME, "li")
+                        if store_items:
+                            result_txt += "  Locations:\n"
+                            stores_html += "<ul>"
+                            for store in store_items:
+                                try:
+                                    addr = store.find_element(By.CLASS_NAME, "address").get_attribute("innerHTML").strip().replace("<br>", ", ")
+                                    qty = store.find_element(By.CLASS_NAME, "quantity").text.strip()
+                                    result_txt += f"    - {addr}: {qty}\n"
+                                    maps_link = f"https://www.google.com/maps/search/?api=1&query={addr.replace(' ', '+')}"
+                                    stores_html += f"<li><a href='{maps_link}' target='_blank'>{addr}</a> — {qty}</li>"
+                                except:
+                                    continue
+                            stores_html += "</ul>"
+                    except:
+                        result_txt += "  Inventory: Not Available\n"
+                        stores_html = "Not Available"
 
-                    if store_items:
-                        result_txt += "  Locations:\n"
-                        stores_html += "<ul>"
-                        for store in store_items:
-                            try:
-                                addr = store.find_element(By.CLASS_NAME, "address").get_attribute("innerHTML").strip().replace("<br>", ", ")
-                                qty = store.find_element(By.CLASS_NAME, "quantity").text.strip()
-                                result_txt += f"    - {addr}: {qty}\n"
-                                maps_link = f"https://www.google.com/maps/search/?api=1&query={addr.replace(' ', '+')}"
-                                stores_html += f"<li><a href='{maps_link}' target='_blank'>{addr}</a> — {qty}</li>"
-                            except:
-                                continue
-                        stores_html += "</ul>"
-                except:
-                    result_txt += "  Inventory: Not Available\n"
-                    stores_html = "Not Available"
+                    result_html = f"<tr><td><strong>{title}</strong></td><td>{price}</td><td>{size}</td><td>{stores_html}</td></tr>\n"
 
-                result_html = f"<tr><td><strong>{title}</strong></td><td>{price}</td><td>{size}</td><td>{stores_html}</td></tr>\n"
+                    print(result_txt)
+                    txt.write(result_txt + "\n")
+                    html.write(result_html)
 
-                print(result_txt)
-                txt.write(result_txt + "\n")
-                html.write(result_html)
-
-            txt.write("-" * 40 + "\n\n")
-            html.write("</table><hr>\n")
+                txt.write("-" * 40 + "\n\n")
+                html.write("</table><hr>\n")
 
     except Exception:
         print("\n❌ Error encountered:")
         traceback.print_exc()
-        print("\nBrowser window will remain open for debugging.")
-    print(f"🧷 Done searching: {term} — browser left open.")
+
+    finally:
+        driver.quit()
 
 with open(output_html, "a", encoding="utf-8") as f:
     f.write("</body></html>")
 
 print(f"\n✅ All searches complete. Results saved to:\n- {output_txt}\n- {output_html}")
-input("\nPress Enter to close all browsers...")
 
-os.system("taskkill /f /im chrome.exe")
-sys.exit()
+# Generate PDF
+pdfkit.from_file(output_html, output_pdf, configuration=pdfkit.configuration(wkhtmltopdf='/usr/bin/wkhtmltopdf'))
