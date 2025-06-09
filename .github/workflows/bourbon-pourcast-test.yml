@@ -6,11 +6,11 @@ on:
     - cron: '0 12 * * *'
 
 jobs:
-  run-bourbon-pourcast:
+  bourbon-pourcast:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v3
 
       - name: Set up Python
@@ -24,19 +24,19 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y wkhtmltopdf
 
-      - name: Run Bourbon Pourcast Script
+      - name: Run Pourcast script
         run: python wakeabc_search.py
 
-      - name: DEBUG: Check if GH_PAT is available
+      - name: Debug: Check GH_PAT
         run: |
           if [ -z "${{ secrets.GH_PAT }}" ]; then
-            echo "❌ GH_PAT is EMPTY or not set"
+            echo "❌ GH_PAT is EMPTY"
             exit 1
           else
-            echo "✅ GH_PAT is present"
+            echo "✅ GH_PAT is set"
           fi
 
-      - name: Commit and push results using Personal Access Token
+      - name: Commit and push
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
