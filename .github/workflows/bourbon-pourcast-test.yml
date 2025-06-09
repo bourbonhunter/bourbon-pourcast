@@ -1,0 +1,11 @@
+name: Bourbon Pourcast Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  echo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test output
+        run: echo "Pourcast test triggered"
