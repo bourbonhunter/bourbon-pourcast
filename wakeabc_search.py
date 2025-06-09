@@ -11,7 +11,7 @@ import os
 from datetime import datetime
 import pdfkit
 
-search_terms = ["Old Fitz", "Blanton", "Eagle Rare", "stagg", "Van Winkle", "king of kentucky", "parkers", "elmer", "taylor", "weller", "old forester", "michter", "blue note"]
+search_terms = ["Old Fitz", "Blanton", "midwinter"elmer"]
 
 output_txt = "search_results.txt"
 output_html = "search_results.html"
