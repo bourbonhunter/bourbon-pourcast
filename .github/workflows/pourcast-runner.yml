@@ -1,9 +1,9 @@
-name: Run Bourbon Pourcast
- 
+name: Bourbon Pourcast Runner
+
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 12 * * *'  # runs daily at 12:00 UTC
+    - cron: '0 12 * * *'  # Runs daily at 12:00 UTC
 
 jobs:
   run-bourbon-pourcast:
@@ -24,11 +24,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y wkhtmltopdf
 
-      - name: Run Bourbon Pourcast Script
+      - name: Run Bourbon Pourcast script
         run: python wakeabc_search.py
 
       - name: "Debug: Check GH_PAT"
-        run: echo "GH_PAT is set: ${GH_PAT:-NOT SET}"
+        run: echo "${{ secrets.GH_PAT }}"
 
       - name: Commit and push results using Personal Access Token
         env:
