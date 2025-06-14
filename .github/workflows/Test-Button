@@ -1,0 +1,11 @@
+# .github/workflows/test-button.yml
+name: Test Button
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Test workflow triggered"
