@@ -4,11 +4,7 @@ Pour Decisions Pourcast
 Results for 'Old Fitz':
 - OLD FITZGERALD 9Y DECANTER SPRING 2025
   Price: 129.95 USD | Size: .750L
-  Locations:
-    - 11360 Capital Blvd., Wake Forest, NC 27587: 1 in stock
-    - 6494 Tryon Rd., Cary, NC 27511: 6 in stock
-    - 1415 E. Williams St., Apex, NC 27617: 6 in stock
-    - 6809 Davis Circle, Raleigh, NC 27612: 6 in stock
+  Inventory: Not Available
 
 - TEQUILA OCHO ANEJO OLD FITZGERALD
   Price: 109.95 USD | Size: .750L
@@ -42,11 +38,8 @@ Results for 'Old Fitz':
   Price: 59.95 USD | Size: .70L
   Locations:
     - 7200 Sandy Fork Rd., Raleigh, NC 27609: 1 in stock
-    - 1793 West Williams St., Apex, NC 27502: 12 in stock
-    - 11360 Capital Blvd., Wake Forest, NC 27587: 5 in stock
     - 1601-61 Cross Link Rd., Raleigh, NC 27610: 12 in stock
-    - 1505 Banyon Pl., Wendell, NC 27571: 4 in stock
-    - 6809 Davis Circle, Raleigh, NC 27612: 12 in stock
+    - 1505 Banyon Pl., Wendell, NC 27571: 1 in stock
 
 - OLD FITZGERALD B/B
   Price: 8.25 USD | Size: .750L
@@ -93,10 +86,7 @@ Results for 'Blanton':
 
 - BLANTON'S BOURBON
   Price: 79.95 USD | Size: .750L
-  Locations:
-    - 6494 Tryon Rd., Cary, NC 27511: 6 in stock
-    - 1415 E. Williams St., Apex, NC 27617: 6 in stock
-    - 6809 Davis Circle, Raleigh, NC 27612: 6 in stock
+  Inventory: Not Available
 
 - BLANTON'S TAKARA GOLD
   Price: 8.25 USD | Size: .750L
@@ -108,7 +98,7 @@ Results for 'midwinter':
 - HIGH WEST MIDWINTER NIGHTS DRA
   Price: 149.95 USD | Size: .750L
   Locations:
-    - 200 New Rand Road, Garner, NC 27529: 33 in stock
+    - 200 New Rand Road, Garner, NC 27529: 30 in stock
 
 ----------------------------------------
 
