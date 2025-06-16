@@ -1,6 +1,5 @@
 import requests
 from bs4 import BeautifulSoup
-from datetime import datetime
 import re
 
 def fetch_drop_info():
@@ -18,22 +17,21 @@ def fetch_drop_info():
 
     soup = BeautifulSoup(response.text, "html.parser")
 
-    # Look for the div that contains drop info (typically post content)
-    drop_text_div = soup.find("div", string=re.compile("Store #\\d+", re.IGNORECASE))
-    if not drop_text_div:
-        print("❌ No drop info found.")
+    # Grab the first blog post container
+    post_container = soup.select_one('[data-hook="post-list-container"] [data-hook="post-description"]')
+    if not post_container:
+        print("❌ Could not locate blog post container.")
         return
 
-    drop_text = drop_text_div.get_text(strip=True)
-    print(f"✅ Drop Info Found: {drop_text}")
+    # Extract drop text
+    drop_text = post_container.get_text(strip=True)
 
-    # Now try to extract relative time like "4 days ago"
-    time_tag = soup.find("span", {"class": "post-metadata__date"})
-    if time_tag:
-        relative_time = time_tag.get_text(strip=True)
-        print(f"📅 Posted: {relative_time}")
-    else:
-        print("⚠️ Could not determine how many days ago it was posted.")
+    # Extract the relative post time from "4 days ago", etc.
+    time_tag = soup.select_one(".post-metadata__date")
+    relative_time = time_tag.get_text(strip=True) if time_tag else "Unknown"
+
+    print(f"✅ Most Recent Drop: {drop_text}")
+    print(f"📅 Posted: {relative_time}")
 
 if __name__ == "__main__":
     fetch_drop_info()
