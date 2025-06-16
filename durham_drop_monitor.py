@@ -1,28 +1,23 @@
 import requests
 from bs4 import BeautifulSoup
 
-def main():
-    url = "https://www.durhamabc.com/drops"
+URL = "https://www.durhamabc.com/drops"
+
+def fetch_drop_page():
     try:
-        response = requests.get(url)
+        response = requests.get(URL, timeout=10)
         response.raise_for_status()
-    except requests.RequestException as e:
-        print(f"❌ Failed to fetch page: {e}")
-        return
+        html = response.text
 
-    soup = BeautifulSoup(response.text, "html.parser")
-
-    # 🔍 Write HTML to file for inspection
-    try:
+        # Save HTML for debugging
         with open("durham_debug.html", "w", encoding="utf-8") as f:
-            f.write(soup.prettify())
-        print("✅ Saved HTML to durham_debug.html for inspection.")
-    except Exception as e:
-        print(f"❌ Failed to write debug HTML: {e}")
-        return
+            f.write(html)
 
-    # Placeholder for parsing logic until we verify HTML structure
-    print("🕵️ Parsing skipped until we review durham_debug.html")
+        print("✅ Saved HTML to durham_debug.html for inspection.")
+        print("🕵️ Parsing skipped until we review durham_debug.html")
+
+    except Exception as e:
+        print(f"❌ Error fetching Durham drop page: {e}")
 
 if __name__ == "__main__":
-    main()
+    fetch_drop_page()
