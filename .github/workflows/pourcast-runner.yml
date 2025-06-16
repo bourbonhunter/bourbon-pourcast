@@ -1,12 +1,12 @@
-name: Bourbon Pourcast Runner
+name: Run Bourbon Pourcast
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 12 * * *'  # Runs daily at 12:00 UTC
+    - cron: '0 12 * * *'  # Run daily at 12:00 UTC
 
 jobs:
-  run-bourbon-pourcast:
+  run-pourcast:
     runs-on: ubuntu-latest
 
     steps:
@@ -24,19 +24,21 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y wkhtmltopdf
 
-      - name: Run Bourbon Pourcast script
+      - name: Run Bourbon Pourcast Script
         run: python wakeabc_search.py
 
-      - name: "Debug: Check GH_PAT"
-        run: echo "${{ secrets.GH_PAT }}"
+      - name: Send Email with Results
+        env:
+          SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+          ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
+        run: python send_email.py
 
-      - name: Commit and push results using Personal Access Token
+      - name: Commit and Push Results
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
-          git add .
+          git add bourbon_report.pdf search_results.html search_results.txt
           git commit -m "Auto-update: bourbon results" || echo "Nothing to commit"
-          git remote set-url origin https://x-access-token:${GH_PAT}@github.com/${{ github.repository }}.git
-          git push origin HEAD:main
+          git push https://x-access-token:${GH_PAT}@github.com/${{ github.repository }}.git HEAD:main
