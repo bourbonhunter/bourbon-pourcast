@@ -1,64 +1,81 @@
 import requests
 from bs4 import BeautifulSoup
-from datetime import datetime
 import re
 
-DROP_URL = "https://www.durhamabc.com/drops"
+BASE_URL = "https://www.durhamabc.com"
+DROPS_URL = f"{BASE_URL}/drops"
 DEBUG_FILE = "durham_debug.html"
 
-def fetch_drop_page():
+def fetch_drops_page():
     try:
-        response = requests.get(DROP_URL)
+        response = requests.get(DROPS_URL)
         response.raise_for_status()
-        html = response.text
-        with open(DEBUG_FILE, "w", encoding="utf-8") as f:
-            f.write(html)
-        return html
+        return response.text
     except Exception as e:
-        print(f"❌ Failed to fetch Durham drop page: {e}")
+        print(f"❌ Error fetching drops page: {e}")
         return None
 
-def parse_drop_info(html):
+def find_latest_post_url(html):
+    soup = BeautifulSoup(html, "html.parser")
+    post_link = soup.find("a", href=re.compile(r"^/post/drop-available"))
+    if post_link:
+        return BASE_URL + post_link["href"]
+    return None
+
+def fetch_post_page(post_url):
+    try:
+        response = requests.get(post_url)
+        response.raise_for_status()
+        with open(DEBUG_FILE, "w", encoding="utf-8") as f:
+            f.write(response.text)
+        return response.text
+    except Exception as e:
+        print(f"❌ Error fetching post page: {e}")
+        return None
+
+def extract_post_content(html):
     soup = BeautifulSoup(html, "html.parser")
 
-    # Look for a span tag with a title like "4 days ago"
-    time_tag = soup.find("span", title=re.compile(r"\d+ days? ago"))
-    if not time_tag:
-        print("❌ Could not locate drop timestamp.")
-        return None
+    # Drop description (looks like "Store #1 1928 Holloway Street...")
+    drop_div = soup.find("div", class_=re.compile(r"BOlnTh"))
+    drop_text = drop_div.get_text(strip=True) if drop_div else None
 
-    days_ago = time_tag["title"]
-
-    # Get the closest previous div containing drop description
-    drop_text = None
-    for parent in time_tag.parents:
-        description_div = parent.find("div", class_=re.compile(r"BOlnTh"))
-        if description_div:
-            drop_text = description_div.get_text(strip=True)
-            break
+    # Posted date (from span title, like "4 days ago")
+    time_span = soup.find("span", title=re.compile(r"\d+ (day|hour)s? ago"))
+    posted = time_span["title"] if time_span else None
 
     if not drop_text:
         print("❌ Could not locate drop description.")
-        return None
-
-    return {
-        "description": drop_text,
-        "posted": days_ago
-    }
+    if not posted:
+        print("❌ Could not locate drop age.")
+    if drop_text and posted:
+        return {"description": drop_text, "posted": posted}
+    return None
 
 def main():
-    html = fetch_drop_page()
-    if not html:
+    print("🔍 Checking for latest Durham drop...")
+
+    drops_html = fetch_drops_page()
+    if not drops_html:
         return
 
-    drop_info = parse_drop_info(html)
-    if not drop_info:
+    post_url = find_latest_post_url(drops_html)
+    if not post_url:
+        print("❌ Could not locate post URL.")
+        return
+
+    print(f"🔗 Latest drop post URL: {post_url}")
+    post_html = fetch_post_page(post_url)
+    if not post_html:
+        return
+
+    info = extract_post_content(post_html)
+    if info:
+        print("\n✅ Durham Drop Found:")
+        print(f"📍 {info['description']}")
+        print(f"🕒 Posted: {info['posted']}")
+    else:
         print("❌ No drop info extracted.")
-        return
-
-    print("✅ Drop Info:")
-    print(f"📍 {drop_info['description']}")
-    print(f"📅 Posted: {drop_info['posted']}")
 
 if __name__ == "__main__":
     main()
