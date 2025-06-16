@@ -1,37 +1,28 @@
 import requests
 from bs4 import BeautifulSoup
-import re
 
-def fetch_drop_info():
+def main():
     url = "https://www.durhamabc.com/drops"
-    headers = {
-        "User-Agent": "Mozilla/5.0"
-    }
-
     try:
-        response = requests.get(url, headers=headers)
+        response = requests.get(url)
         response.raise_for_status()
-    except Exception as e:
-        print(f"⚠️ Request failed: {e}")
+    except requests.RequestException as e:
+        print(f"❌ Failed to fetch page: {e}")
         return
 
     soup = BeautifulSoup(response.text, "html.parser")
 
-    # Find all drop containers with the class that matches the known drop text
-    # We look for something like: <div class="BOlnTh">Store #1 ...</div>
-    store_divs = soup.find_all("div", class_="BOlnTh")
-    if not store_divs:
-        print("❌ Could not find any drop info.")
+    # 🔍 Write HTML to file for inspection
+    try:
+        with open("durham_debug.html", "w", encoding="utf-8") as f:
+            f.write(soup.prettify())
+        print("✅ Saved HTML to durham_debug.html for inspection.")
+    except Exception as e:
+        print(f"❌ Failed to write debug HTML: {e}")
         return
 
-    drop_text = store_divs[0].get_text(strip=True)
-
-    # Try to find relative post date
-    time_tag = soup.find("span", class_="post-metadata__date")
-    relative_time = time_tag.get_text(strip=True) if time_tag else "Unknown"
-
-    print(f"✅ Most Recent Drop: {drop_text}")
-    print(f"📅 Posted: {relative_time}")
+    # Placeholder for parsing logic until we verify HTML structure
+    print("🕵️ Parsing skipped until we review durham_debug.html")
 
 if __name__ == "__main__":
-    fetch_drop_info()
+    main()
