@@ -3,62 +3,58 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 import re
 
-def check_durham_drop():
+def get_latest_drop_info():
     url = "https://www.durhamabc.com/drops"
-
     try:
         response = requests.get(url)
         response.raise_for_status()
-    except Exception as e:
-        print(f"❌ Failed to fetch Durham ABC page: {e}")
-        return
+    except requests.RequestException as e:
+        print(f"❌ Failed to load page: {e}")
+        return None
 
     soup = BeautifulSoup(response.text, "html.parser")
 
-    # Look for "Drop Available" to determine active drop
-    drop_active = bool(soup(text=re.compile(r"drop available", re.I)))
-    if drop_active:
-        print("✅ A DROP IS CURRENTLY ACTIVE!")
-    else:
-        print("❌ No drop active.")
+    # Find the first blog post card
+    post = soup.find("div", class_="sppb-addon-article")
 
-    # Find the most recent post title, date, and body
-    post_section = soup.find("article")
-    if not post_section:
+    if not post:
         print("⚠️ Could not find post content.")
-        return
+        return None
 
-    # Title
-    title_tag = post_section.find(["h2", "h1"])
-    title = title_tag.get_text(strip=True) if title_tag else "No title found"
+    title_tag = post.find("h3")
+    title = title_tag.get_text(strip=True) if title_tag else "Untitled"
 
-    # Date
-    date_tag = post_section.find(string=re.compile(r"posted on", re.I))
-    if date_tag:
-        match = re.search(r"posted on\s+([A-Za-z]+\s+\d{1,2},\s+\d{4})", date_tag, re.I)
-        if match:
-            post_date_str = match.group(1)
-            try:
-                post_date = datetime.strptime(post_date_str, "%B %d, %Y")
-                days_ago = (datetime.now() - post_date).days
-                date_summary = f"{post_date_str} ({days_ago} days ago)"
-            except ValueError:
-                date_summary = f"Unknown format: {post_date_str}"
-        else:
-            date_summary = "Date not found"
+    date_tag = post.find("small")
+    date_text = date_tag.get_text(strip=True) if date_tag else "Unknown date"
+
+    # Extract date from format like: "Published: 14 June 2024"
+    date_match = re.search(r"Published:\s*(\d+\s+\w+\s+\d{4})", date_text)
+    if date_match:
+        post_date = datetime.strptime(date_match.group(1), "%d %B %Y")
+        days_ago = (datetime.now() - post_date).days
     else:
-        date_summary = "No date text found"
+        post_date = None
+        days_ago = "?"
 
-    # Body
-    body_tag = post_section.find("p")
-    body_text = body_tag.get_text(strip=True) if body_tag else "No body content found"
+    # Get post summary text
+    summary_tag = post.find("p")
+    summary = summary_tag.get_text(strip=True) if summary_tag else "No summary found."
 
-    # Print summary
-    print("\n📋 Most Recent Drop Info")
-    print(f"Title: {title}")
-    print(f"Posted: {date_summary}")
-    print(f"Summary: {body_text}")
+    drop_active = "drop" in title.lower() and "available" in title.lower()
 
-# Run only when this file is executed directly
+    print("📝 Most Recent Drop Blog Post:")
+    print(f"📅 Date: {post_date.strftime('%B %d, %Y') if post_date else 'Unknown'} ({days_ago} days ago)")
+    print(f"🧾 Title: {title}")
+    print(f"📄 Summary: {summary}")
+    print(f"{'✅ Drop is ACTIVE!' if drop_active else '❌ No drop active.'}")
+
+    return {
+        "title": title,
+        "date": post_date,
+        "days_ago": days_ago,
+        "summary": summary,
+        "active": drop_active
+    }
+
 if __name__ == "__main__":
-    check_durham_drop()
+    get_latest_drop_info()
