@@ -1,0 +1,25 @@
+name: Durham Drop Monitor
+
+on:
+  schedule:
+    - cron: "0 13,23 * * *"  # Runs at 9 AM & 7 PM ET
+  workflow_dispatch:
+
+jobs:
+  check-durham-drop:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4
+
+      - name: Run Durham Drop Monitor
+        run: python durham_drop_monitor.py
