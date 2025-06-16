@@ -1,29 +1,39 @@
 import requests
 from bs4 import BeautifulSoup
+from datetime import datetime
+import re
 
-def fetch_latest_drop():
+def fetch_drop_info():
     url = "https://www.durhamabc.com/drops"
-    response = requests.get(url, timeout=10)
-    soup = BeautifulSoup(response.text, "html.parser")
+    headers = {
+        "User-Agent": "Mozilla/5.0"
+    }
 
     try:
-        # Find the drop description block
-        drop_div = soup.find("div", class_="BOlnTh")
-        drop_text = drop_div.get_text(strip=True) if drop_div else None
-
-        # Find the "x days ago" text
-        date_span = soup.find("span", class_="post-metadata__date")
-        time_ago = date_span.get_text(strip=True) if date_span else None
-
-        if drop_text:
-            print("✅ Latest Durham Drop Found:")
-            print(f"- Details: {drop_text}")
-            print(f"- Posted: {time_ago}")
-        else:
-            print("❌ No drop info found.")
-
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
     except Exception as e:
-        print(f"⚠️ Error extracting Durham drop details: {e}")
+        print(f"⚠️ Request failed: {e}")
+        return
+
+    soup = BeautifulSoup(response.text, "html.parser")
+
+    # Look for the div that contains drop info (typically post content)
+    drop_text_div = soup.find("div", string=re.compile("Store #\\d+", re.IGNORECASE))
+    if not drop_text_div:
+        print("❌ No drop info found.")
+        return
+
+    drop_text = drop_text_div.get_text(strip=True)
+    print(f"✅ Drop Info Found: {drop_text}")
+
+    # Now try to extract relative time like "4 days ago"
+    time_tag = soup.find("span", {"class": "post-metadata__date"})
+    if time_tag:
+        relative_time = time_tag.get_text(strip=True)
+        print(f"📅 Posted: {relative_time}")
+    else:
+        print("⚠️ Could not determine how many days ago it was posted.")
 
 if __name__ == "__main__":
-    fetch_latest_drop()
+    fetch_drop_info()
