@@ -17,9 +17,9 @@ def fetch_drops_page():
 
 def find_latest_post_url(html):
     soup = BeautifulSoup(html, "html.parser")
-    post_link = soup.find("a", href=re.compile(r"^/post/drop-available"))
-    if post_link:
-        return BASE_URL + post_link["href"]
+    for a in soup.find_all("a", href=True):
+        if a["href"].startswith("/post/drop-available"):
+            return BASE_URL + a["href"]
     return None
 
 def fetch_post_page(post_url):
