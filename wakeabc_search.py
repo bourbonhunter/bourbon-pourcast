@@ -8,8 +8,6 @@ import time
 import traceback
 import os
 from datetime import datetime
-import requests
-from bs4 import BeautifulSoup
 import pdfkit
 
 search_terms = [
@@ -23,7 +21,7 @@ output_html = "search_results.html"
 output_pdf = "bourbon_report.pdf"
 today = datetime.now().strftime("%B %d, %Y")
 
-# Clear output files
+# Clear previous output
 with open(output_txt, "w", encoding="utf-8") as f:
     f.write("Pour Decisions Pourcast\n" + "=" * 40 + "\n\n")
 
@@ -84,15 +82,16 @@ with open(output_html, "w", encoding="utf-8") as f:
       <h1>Pour Decisions Pourcast</h1>
       <p class="date"><em>{today}</em></p>
     </div>
-    <img src="logo 1.png" alt="Pour Decisions Logo" style="height: 200px; margin-left: 40px; border-radius: 6px;" />
+    <img src="logo 1.png" alt="Pour Decisions Logo" style="height: 120px; margin-left: 40px; border-radius: 6px;" />
   </header>
 """)
 
 for term in search_terms:
     options = Options()
-    options.add_argument('--headless=new')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
+    options.add_argument("--headless")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+
     driver = webdriver.Chrome(options=options)
 
     try:
@@ -180,27 +179,13 @@ for term in search_terms:
     finally:
         driver.quit()
 
-# Fetch and append Durham Drop
-def fetch_durham_drop_html():
-    try:
-        url = "https://www.durhamabc.com/post/drop-available-1"
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.text, "html.parser")
-        content_div = soup.find("div", {"data-hook": "post-body"}) or soup.find("main")  # fallback
-        return str(content_div) if content_div else "<p>No Durham drop details found.</p>"
-    except Exception as e:
-        print(f"❌ Failed to fetch Durham drop info: {e}")
-        return "<p>Could not retrieve Durham drop info.</p>"
-
-drop_html = fetch_durham_drop_html()
-
 with open(output_html, "a", encoding="utf-8") as f:
-    f.write("<hr><h2>Durham County ABC Drop Alert</h2>")
-    f.write(drop_html)
     f.write("</body></html>")
 
-# Generate PDF
-pdfkit.from_file(output_html, output_pdf)
+# Convert HTML to PDF
+try:
+    pdfkit.from_file(output_html, output_pdf, configuration=pdfkit.configuration(wkhtmltopdf="/usr/bin/wkhtmltopdf"))
+except Exception as e:
+    print(f"❌ PDF generation failed: {e}")
 
 print(f"\n✅ All searches complete. Results saved to:\n- {output_txt}\n- {output_html}\n- {output_pdf}")
