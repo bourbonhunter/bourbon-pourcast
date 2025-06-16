@@ -3,16 +3,11 @@ name: Run Bourbon Pourcast
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 12 * * *'  # Runs daily at 12:00 UTC
+    - cron: '0 12 * * *'  # runs daily at 12:00 UTC
 
 jobs:
   run-bourbon-pourcast:
     runs-on: ubuntu-latest
-
-    env:
-      MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
-      MAILGUN_DOMAIN: ${{ secrets.MAILGUN_DOMAIN }}
-      ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
 
     steps:
       - name: Checkout repository
@@ -29,17 +24,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y wkhtmltopdf
 
-      - name: Run Bourbon Pourcast Script
+      - name: Run Bourbon Pourcast script
         run: python wakeabc_search.py
 
-      - name: Send Mailgun Email Notification
+      - name: Send alert email with PDF attachment
+        env:
+          MAILGUN_DOMAIN: ${{ secrets.MAILGUN_DOMAIN }}
+          MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
+          ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
         run: python send_mailgun_email.py
-
-      - name: Commit and push updated results
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
-          git add search_results.html bourbon_report.pdf search_results.txt || true
-          git commit -m "Auto-update: bourbon results" || echo "Nothing to commit"
-          git remote set-url origin https://x-access-token:${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git
-          git push origin HEAD:main
