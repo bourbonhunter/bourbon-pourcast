@@ -1,81 +1,82 @@
 import requests
 from bs4 import BeautifulSoup
-import re
+from datetime import datetime
+from urllib.parse import urljoin
 
 BASE_URL = "https://www.durhamabc.com"
-DROPS_URL = f"{BASE_URL}/drops"
-DEBUG_FILE = "durham_debug.html"
+DROP_PAGE = f"{BASE_URL}/drops"
 
-def fetch_drops_page():
+def fetch_drop_page():
     try:
-        response = requests.get(DROPS_URL)
+        response = requests.get(DROP_PAGE)
         response.raise_for_status()
         return response.text
     except Exception as e:
-        print(f"❌ Error fetching drops page: {e}")
+        print(f"❌ Error fetching drop page: {e}")
         return None
 
 def find_latest_post_url(html):
     soup = BeautifulSoup(html, "html.parser")
     for a in soup.find_all("a", href=True):
-        if a["href"].startswith("/post/drop-available"):
-            return BASE_URL + a["href"]
+        href = a["href"]
+        if "drop-available" in href:
+            full_url = urljoin(BASE_URL, href)
+            print(f"🔗 Found drop link: {full_url}")
+            return full_url
+    print("⚠️ No matching <a> tag found with 'drop-available' in href.")
     return None
 
-def fetch_post_page(post_url):
+def fetch_post_content(url):
     try:
-        response = requests.get(post_url)
+        response = requests.get(url)
         response.raise_for_status()
-        with open(DEBUG_FILE, "w", encoding="utf-8") as f:
-            f.write(response.text)
         return response.text
     except Exception as e:
-        print(f"❌ Error fetching post page: {e}")
+        print(f"❌ Error fetching post content: {e}")
         return None
 
-def extract_post_content(html):
+def extract_drop_info(html):
     soup = BeautifulSoup(html, "html.parser")
 
-    # Drop description (looks like "Store #1 1928 Holloway Street...")
-    drop_div = soup.find("div", class_=re.compile(r"BOlnTh"))
-    drop_text = drop_div.get_text(strip=True) if drop_div else None
-
-    # Posted date (from span title, like "4 days ago")
-    time_span = soup.find("span", title=re.compile(r"\d+ (day|hour)s? ago"))
-    posted = time_span["title"] if time_span else None
-
-    if not drop_text:
+    # Drop description block (may require adjustment if class names change)
+    drop_desc = soup.find("div", class_="BOlnTh")
+    if not drop_desc:
         print("❌ Could not locate drop description.")
-    if not posted:
-        print("❌ Could not locate drop age.")
-    if drop_text and posted:
-        return {"description": drop_text, "posted": posted}
-    return None
+        return None
+
+    drop_text = drop_desc.get_text(strip=True)
+
+    # Days ago (optional display)
+    days_ago_span = soup.find("span", class_="post-metadata__date")
+    days_ago = days_ago_span.get_text(strip=True) if days_ago_span else "?"
+
+    return {
+        "description": drop_text,
+        "days_ago": days_ago
+    }
 
 def main():
     print("🔍 Checking for latest Durham drop...")
-
-    drops_html = fetch_drops_page()
-    if not drops_html:
+    main_page = fetch_drop_page()
+    if not main_page:
         return
 
-    post_url = find_latest_post_url(drops_html)
+    post_url = find_latest_post_url(main_page)
     if not post_url:
-        print("❌ Could not locate post URL.")
         return
 
-    print(f"🔗 Latest drop post URL: {post_url}")
-    post_html = fetch_post_page(post_url)
+    post_html = fetch_post_content(post_url)
     if not post_html:
         return
 
-    info = extract_post_content(post_html)
-    if info:
-        print("\n✅ Durham Drop Found:")
-        print(f"📍 {info['description']}")
-        print(f"🕒 Posted: {info['posted']}")
-    else:
+    drop_info = extract_drop_info(post_html)
+    if not drop_info:
         print("❌ No drop info extracted.")
+        return
+
+    print("✅ Latest Drop Info:")
+    print(f"🛒 {drop_info['description']}")
+    print(f"📅 Posted: {drop_info['days_ago']} ago")
 
 if __name__ == "__main__":
     main()
