@@ -17,17 +17,17 @@ def fetch_drop_info():
 
     soup = BeautifulSoup(response.text, "html.parser")
 
-    # Grab the first blog post container
-    post_container = soup.select_one('[data-hook="post-list-container"] [data-hook="post-description"]')
-    if not post_container:
-        print("❌ Could not locate blog post container.")
+    # Find all drop containers with the class that matches the known drop text
+    # We look for something like: <div class="BOlnTh">Store #1 ...</div>
+    store_divs = soup.find_all("div", class_="BOlnTh")
+    if not store_divs:
+        print("❌ Could not find any drop info.")
         return
 
-    # Extract drop text
-    drop_text = post_container.get_text(strip=True)
+    drop_text = store_divs[0].get_text(strip=True)
 
-    # Extract the relative post time from "4 days ago", etc.
-    time_tag = soup.select_one(".post-metadata__date")
+    # Try to find relative post date
+    time_tag = soup.find("span", class_="post-metadata__date")
     relative_time = time_tag.get_text(strip=True) if time_tag else "Unknown"
 
     print(f"✅ Most Recent Drop: {drop_text}")
