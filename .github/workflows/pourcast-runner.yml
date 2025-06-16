@@ -3,11 +3,16 @@ name: Run Bourbon Pourcast
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 12 * * *'  # Run daily at 12:00 UTC
+    - cron: '0 12 * * *'  # Runs daily at 12:00 UTC
 
 jobs:
-  run-pourcast:
+  run-bourbon-pourcast:
     runs-on: ubuntu-latest
+
+    env:
+      MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
+      MAILGUN_DOMAIN: ${{ secrets.MAILGUN_DOMAIN }}
+      ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
 
     steps:
       - name: Checkout repository
@@ -27,18 +32,14 @@ jobs:
       - name: Run Bourbon Pourcast Script
         run: python wakeabc_search.py
 
-      - name: Send Email with Results
-        env:
-          SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
-          ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
-        run: python send_email.py
+      - name: Send Mailgun Email Notification
+        run: python send_mailgun_email.py
 
-      - name: Commit and Push Results
-        env:
-          GH_PAT: ${{ secrets.GH_PAT }}
+      - name: Commit and push updated results
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
-          git add bourbon_report.pdf search_results.html search_results.txt
+          git add search_results.html bourbon_report.pdf search_results.txt || true
           git commit -m "Auto-update: bourbon results" || echo "Nothing to commit"
-          git push https://x-access-token:${GH_PAT}@github.com/${{ github.repository }}.git HEAD:main
+          git remote set-url origin https://x-access-token:${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git
+          git push origin HEAD:main
