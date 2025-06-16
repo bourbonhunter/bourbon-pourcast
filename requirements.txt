@@ -1,2 +1,7 @@
-pdfkit
+flask
 selenium
+pdfkit
+sendgrid
+requests
+beautifulsoup4
+
