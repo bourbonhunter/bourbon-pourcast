@@ -1,113 +1,97 @@
-import requests
-from bs4 import BeautifulSoup
 import csv
-import difflib
-from fpdf import FPDF
 import os
-import base64
+from fpdf import FPDF
+from datetime import datetime
 
+TXT_OUTPUT = "search_results.txt"
 HTML_OUTPUT = "search_results.html"
-TEXT_OUTPUT = "search_results.txt"
 PDF_OUTPUT = "bourbon_report.pdf"
-CSV_CURRENT = "current_inventory.csv"
-CSV_PREVIOUS = "previous_inventory.csv"
-
+CURRENT_CSV = "current_inventory.csv"
+PREVIOUS_CSV = "previous_inventory.csv"
+FONT_PATH = "DejaVuSans.ttf"
 FONT_NAME = "DejaVu"
-FONT_B64 = """
-AAEAAAAUAQAABABARkZUTaBPHiQAAAFMAAAAHEdERUaO7JTDAAABaAAAApJHUE9TVoDENQAAA/wAAJ6KR1NVQsHQQFkAAKKIAAAV3k1BVEinMjh9AAC4aAAABj5PUy8yWS12LQAAvqgAAABWY21hcPIJUy0AAL8AAAAbkGN2dCAAaR05AADakAAAAf5mcGdtcTR2agAA3JAAAACrZ2FzcAAHAAcAAN08AAAADGdseWYHIChAAADdSAAIgcRoZWFkJcTijAAJXwwAAAA2aGhlYQ2fH8sACV9EAAAAJGhtdHglotvnAAlfaAAAYZZrZXJuDJkIOwAJwQAAAD/8bG9jYWEgYcwACgD8AABhuG1heHAc2gZxAApitAAAACBuYW1lH29NowAKYtQAAD0IcG9zdEkillQACp/cAADyZHByZXA7B/EAAAuSQAAABWgAAAABAAAAAN/t5XUAAAAA4DCcVwAAAADgMJxXAAEAAAAMAAACJgIuAAIA
-"""  # Base64-encoded DejaVuSans.ttf
-
-def decode_and_save_font():
-    font_data = base64.b64decode(FONT_B64)
-    with open("DejaVuSans.ttf", "wb") as f:
-        f.write(font_data)
 
 def run_bourbon_search():
-    # Sample stub data — replace with actual scraping logic
-    results = [
-        {"name": "E.H. Taylor Small Batch", "price": "39.99", "location": "Raleigh"},
-        {"name": "Blanton's Single Barrel", "price": "64.95", "location": "Garner"},
+    # Simulated data for testing
+    return [
+        {"name": "Eagle Rare", "price": "34.95", "inventory": 15},
+        {"name": "Blanton's", "price": "64.95", "inventory": 8},
+        {"name": "Elmer T. Lee", "price": "39.95", "inventory": 0}
     ]
-    return results
 
-def save_to_csv(filename, results):
-    with open(filename, mode='w', newline='', encoding='utf-8') as f:
-        writer = csv.DictWriter(f, fieldnames=["name", "price", "location"])
+def save_to_csv(filename, data):
+    with open(filename, "w", newline='', encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=["name", "price", "inventory"])
         writer.writeheader()
-        for row in results:
-            writer.writerow(row)
+        writer.writerows(data)
 
 def load_csv(filename):
     if not os.path.exists(filename):
         return []
-    with open(filename, newline='', encoding='utf-8') as f:
+    with open(filename, newline='', encoding="utf-8") as f:
         reader = csv.DictReader(f)
         return list(reader)
 
-def compare_deltas(current, previous):
-    current_set = {f"{r['name']}|{r['location']}" for r in current}
-    previous_set = {f"{r['name']}|{r['location']}" for r in previous}
-    added = current_set - previous_set
-    removed = previous_set - current_set
-    return list(added), list(removed)
+def compute_delta(current, previous):
+    current_names = {item['name'] for item in current}
+    previous_names = {item['name'] for item in previous}
 
-def format_deltas(added, removed):
-    delta_text = "🆕 Items Added:\n"
-    delta_text += "\n".join(f"  - {item}" for item in added) if added else "  None"
-    delta_text += "\n\n❌ Items No Longer Available:\n"
-    delta_text += "\n".join(f"  - {item}" for item in removed) if removed else "  None"
-    return delta_text + "\n\n"
+    added = current_names - previous_names
+    removed = previous_names - current_names
 
-def save_text(filename, delta_text, inventory_text):
+    added_items = [item for item in current if item['name'] in added]
+    removed_items = [item for item in previous if item['name'] in removed]
+
+    return added_items, removed_items
+
+def format_inventory_text(data):
+    return "\n".join(
+        f"- {item['name']} | ${item['price']} | Inventory: {item['inventory']}"
+        for item in data
+    )
+
+def save_txt(filename, delta_text, inventory_text):
     with open(filename, "w", encoding="utf-8") as f:
-        f.write(delta_text + inventory_text)
+        f.write(delta_text + "\n\n" + inventory_text)
 
-def save_html(filename, delta_text, results):
-    html = "<html><head><meta charset='UTF-8'><title>Bourbon Report</title></head><body>"
-    html += f"<h2>Inventory Delta</h2><pre>{delta_text}</pre><hr>"
-    html += "<h2>Current Inventory</h2><ul>"
-    for r in results:
-        html += f"<li><strong>{r['name']}</strong> - ${r['price']} at {r['location']}</li>"
-    html += "</ul></body></html>"
+def save_html(filename, delta_text, inventory_text):
     with open(filename, "w", encoding="utf-8") as f:
-        f.write(html)
+        f.write("<html><body>")
+        f.write(f"<h2>Delta Report</h2><pre>{delta_text}</pre>")
+        f.write(f"<h2>Current Inventory</h2><pre>{inventory_text}</pre>")
+        f.write("</body></html>")
 
 def save_pdf(delta_text, inventory_text):
-    decode_and_save_font()
     pdf = FPDF()
     pdf.add_page()
-    pdf.add_font(FONT_NAME, '', "DejaVuSans.ttf", uni=True)
-    pdf.set_font(FONT_NAME, size=12)
-
-    combined = delta_text + "\n" + inventory_text
-    lines = combined.splitlines()
-    for line in lines:
-        pdf.multi_cell(0, 10, line)
+    pdf.add_font(FONT_NAME, '', FONT_PATH, uni=True)
+    pdf.set_font(FONT_NAME, '', 12)
+    pdf.multi_cell(0, 10, delta_text + "\n\n" + inventory_text)
     pdf.output(PDF_OUTPUT)
-
-def generate_inventory_text(results):
-    lines = []
-    for r in results:
-        lines.append(f"- {r['name']} (${r['price']}) — {r['location']}")
-    return "\n".join(lines)
 
 def main():
     print("🔍 Running bourbon inventory search...")
-    current_results = run_bourbon_search()
-    previous_results = load_csv(CSV_PREVIOUS)
+    current_inventory = run_bourbon_search()
+    previous_inventory = load_csv(PREVIOUS_CSV)
 
-    save_to_csv(CSV_CURRENT, current_results)
+    save_to_csv(CURRENT_CSV, current_inventory)
+    added, removed = compute_delta(current_inventory, previous_inventory)
 
-    added, removed = compare_deltas(current_results, previous_results)
-    delta_text = format_deltas(added, removed)
-    inventory_text = generate_inventory_text(current_results)
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    delta_text = f"🕒 Report Generated: {timestamp}\n"
+    delta_text += "\n📈 Items Added:\n" + ("\n".join(f"- {item['name']}" for item in added) or "None")
+    delta_text += "\n\n📉 Items Removed:\n" + ("\n".join(f"- {item['name']}" for item in removed) or "None")
 
-    save_text(TEXT_OUTPUT, delta_text, inventory_text)
-    save_html(HTML_OUTPUT, delta_text, current_results)
+    inventory_text = format_inventory_text(current_inventory)
+
+    save_txt(TXT_OUTPUT, delta_text, inventory_text)
+    save_html(HTML_OUTPUT, delta_text, inventory_text)
     save_pdf(delta_text, inventory_text)
 
-    os.replace(CSV_CURRENT, CSV_PREVIOUS)
-    print("✅ All results generated and saved.")
+    # Replace previous with current
+    os.replace(CURRENT_CSV, PREVIOUS_CSV)
+
+    print(f"✅ All searches complete. Results saved to:\n- {TXT_OUTPUT}\n- {HTML_OUTPUT}\n- {PDF_OUTPUT}")
 
 if __name__ == "__main__":
     main()
