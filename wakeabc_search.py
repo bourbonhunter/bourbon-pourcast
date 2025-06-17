@@ -1,189 +1,114 @@
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-import time
-import traceback
+import requests
+from bs4 import BeautifulSoup
+import csv
 import os
 from datetime import datetime
-import pdfkit
+from fpdf import FPDF
 
-search_terms = [
-    "Old Fitz", "Blanton", "Eagle Rare", "stagg", "Van Winkle", "elmer", "taylor", "weller"
-]
+SEARCH_TERMS = ["weller", "blanton", "e.h. taylor", "stag", "michter", "elijah craig", "booker", "george t. stagg", "blue note", "russell"]
+BASE_URL = "https://www.wakeabc.com/retail-stores"
+TIMESTAMP = datetime.now().strftime("%Y-%m-%d %H:%M")
 
-output_txt = "search_results.txt"
-output_html = "search_results.html"
-output_pdf = "bourbon_report.pdf"
-today = datetime.now().strftime("%B %d, %Y")
+CURRENT_FILE = "current_inventory.csv"
+PREVIOUS_FILE = "previous_inventory.csv"
+TXT_OUTPUT = "search_results.txt"
+HTML_OUTPUT = "search_results.html"
+PDF_OUTPUT = "bourbon_report.pdf"
 
-# Clear previous output
-with open(output_txt, "w", encoding="utf-8") as f:
-    f.write("Pour Decisions Pourcast\n" + "=" * 40 + "\n\n")
+def fetch_inventory():
+    response = requests.get(BASE_URL)
+    soup = BeautifulSoup(response.text, "html.parser")
 
-with open(output_html, "w", encoding="utf-8") as f:
-    f.write(f"""<!DOCTYPE html>
-<html>
-<head>
-  <title>Pour Decisions Pourcast</title>
-  <style>
-    body {{
-      background-color: #FAF3E0;
-      color: #333;
-      font-family: Arial, sans-serif;
-      font-size: 20px;
-      padding: 20px;
-    }}
-    h1, h2 {{
-      color: #7B3F00;
-    }}
-    .date {{
-      font-style: italic;
-      color: #A97448;
-      margin-bottom: 20px;
-    }}
-    header {{
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }}
-    table {{
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 30px;
-    }}
-    th, td {{
-      border: 1px solid #ccc;
-      padding: 8px 12px;
-      text-align: left;
-      vertical-align: top;
-    }}
-    th {{
-      background-color: #e2cdb6;
-      color: #5A2600;
-    }}
-    ul {{
-      margin: 0;
-      padding-left: 18px;
-    }}
-    li {{
-      margin-bottom: 4px;
-    }}
-  </style>
-</head>
-<body>
-  <header>
-    <div>
-      <h1>Pour Decisions Pourcast</h1>
-      <p class="date"><em>{today}</em></p>
-    </div>
-    <img src="logo 1.png" alt="Pour Decisions Logo" style="height: 120px; margin-left: 40px; border-radius: 6px;" />
-  </header>
-""")
+    items = []
+    for row in soup.select("tr"):
+        cells = row.find_all("td")
+        if len(cells) >= 3:
+            name = cells[0].text.strip().lower()
+            if any(term in name for term in SEARCH_TERMS):
+                price = cells[1].text.strip()
+                inventory = cells[2].text.strip()
+                items.append([name, price, inventory])
+    return items
 
-for term in search_terms:
-    options = Options()
-    options.add_argument("--headless")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
+def save_csv(data, filename):
+    with open(filename, "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(["Name", "Price", "Inventory"])
+        writer.writerows(data)
 
-    driver = webdriver.Chrome(options=options)
+def load_csv(filename):
+    if not os.path.exists(filename):
+        return []
+    with open(filename, newline="", encoding="utf-8") as f:
+        reader = csv.reader(f)
+        next(reader)  # skip header
+        return list(reader)
 
-    try:
-        print(f"🔍 Searching for: {term}")
-        driver.get("https://wakeabc.com/search-results/")
+def compute_deltas(current, previous):
+    current_set = set(tuple(row) for row in current)
+    previous_set = set(tuple(row) for row in previous)
+    added = current_set - previous_set
+    removed = previous_set - current_set
+    return sorted(added), sorted(removed)
 
-        search_input = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.NAME, "productSearch"))
-        )
-        search_input.clear()
-        search_input.send_keys(term)
-        search_input.send_keys(Keys.RETURN)
+def format_deltas(added, removed):
+    lines = []
+    lines.append(f"🕒 Report generated: {TIMESTAMP}")
+    lines.append(f"🔼 Items added since last report: {len(added)}")
+    for item in added:
+        lines.append(f"    + {item[0]} | {item[1]} | {item[2]}")
+    lines.append(f"🔽 Items removed since last report: {len(removed)}")
+    for item in removed:
+        lines.append(f"    - {item[0]} | {item[1]} | {item[2]}")
+    lines.append("\n")
+    return "\n".join(lines)
 
-        WebDriverWait(driver, 10).until(
-            EC.presence_of_all_elements_located((By.CLASS_NAME, "wake-product"))
-        )
-        time.sleep(2)
+def format_inventory(inventory):
+    lines = []
+    for item in inventory:
+        lines.append(f"{item[0]} | {item[1]} | {item[2]}")
+    return "\n".join(lines)
 
-        product_elements = driver.find_elements(By.CLASS_NAME, "wake-product")
+def save_txt(delta_text, inventory_text):
+    with open(TXT_OUTPUT, "w", encoding="utf-8") as f:
+        f.write(delta_text)
+        f.write(inventory_text)
 
-        with open(output_txt, "a", encoding="utf-8") as txt, open(output_html, "a", encoding="utf-8") as html:
-            txt.write(f"Results for '{term}':\n")
-            html.write(f"<h2>Results for '{term}':</h2>\n<table>\n<tr><th>Name</th><th>Price</th><th>Size</th><th>Stores</th></tr>\n")
+def save_html(delta_text, inventory_text):
+    with open(HTML_OUTPUT, "w", encoding="utf-8") as f:
+        f.write("<html><body>")
+        f.write("<pre>")
+        f.write(delta_text + "\n")
+        f.write(inventory_text)
+        f.write("</pre></body></html>")
 
-            if not product_elements:
-                txt.write("No results found.\n\n")
-                html.write("<tr><td colspan='4'>No results found.</td></tr>\n</table><hr>\n")
-                continue
+def save_pdf(delta_text, inventory_text):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Courier", size=10)
+    for line in delta_text.split("\n") + inventory_text.split("\n"):
+        pdf.cell(200, 6, txt=line, ln=True)
+    pdf.output(PDF_OUTPUT)
 
-            for product in product_elements:
-                try:
-                    title = product.find_element(By.TAG_NAME, "h4").text.strip()
-                except:
-                    title = "Unknown Title"
+def main():
+    print("🔍 Running bourbon inventory search...")
+    current_data = fetch_inventory()
+    previous_data = load_csv(PREVIOUS_FILE)
+    save_csv(current_data, CURRENT_FILE)
 
-                try:
-                    price = product.find_element(By.CLASS_NAME, "price").text.strip()
-                except:
-                    price = "Price not listed"
+    added, removed = compute_deltas(current_data, previous_data)
+    delta_text = format_deltas(added, removed)
+    inventory_text = format_inventory(current_data)
 
-                try:
-                    size = product.find_element(By.CLASS_NAME, "size").text.strip()
-                except:
-                    size = "Size not listed"
+    save_txt(delta_text, inventory_text)
+    save_html(delta_text, inventory_text)
+    save_pdf(delta_text, inventory_text)
 
-                result_txt = f"- {title}\n  Price: {price} | Size: {size}\n"
-                stores_html = ""
-                try:
-                    show_btn = product.find_element(By.CLASS_NAME, "collapse-heading")
-                    driver.execute_script("arguments[0].click();", show_btn)
-                    time.sleep(0.5)
+    os.replace(CURRENT_FILE, PREVIOUS_FILE)
+    print("✅ All searches complete. Results saved to:")
+    print(f"- {TXT_OUTPUT}")
+    print(f"- {HTML_OUTPUT}")
+    print(f"- {PDF_OUTPUT}")
 
-                    inventory_div = product.find_element(By.CLASS_NAME, "inventory-collapse")
-                    store_items = inventory_div.find_elements(By.TAG_NAME, "li")
-
-                    if store_items:
-                        result_txt += "  Locations:\n"
-                        stores_html += "<ul>"
-                        for store in store_items:
-                            try:
-                                addr = store.find_element(By.CLASS_NAME, "address").get_attribute("innerHTML").strip().replace("<br>", ", ")
-                                qty = store.find_element(By.CLASS_NAME, "quantity").text.strip()
-                                result_txt += f"    - {addr}: {qty}\n"
-                                maps_link = f"https://www.google.com/maps/search/?api=1&query={addr.replace(' ', '+')}"
-                                stores_html += f"<li><a href='{maps_link}' target='_blank'>{addr}</a> — {qty}</li>"
-                            except:
-                                continue
-                        stores_html += "</ul>"
-                except:
-                    result_txt += "  Inventory: Not Available\n"
-                    stores_html = "Not Available"
-
-                result_html = f"<tr><td><strong>{title}</strong></td><td>{price}</td><td>{size}</td><td>{stores_html}</td></tr>\n"
-
-                print(result_txt)
-                txt.write(result_txt + "\n")
-                html.write(result_html)
-
-            txt.write("-" * 40 + "\n\n")
-            html.write("</table><hr>\n")
-
-    except Exception:
-        print("\n❌ Error encountered:")
-        traceback.print_exc()
-    finally:
-        driver.quit()
-
-with open(output_html, "a", encoding="utf-8") as f:
-    f.write("</body></html>")
-
-# Convert HTML to PDF
-try:
-    pdfkit.from_file(output_html, output_pdf, configuration=pdfkit.configuration(wkhtmltopdf="/usr/bin/wkhtmltopdf"))
-except Exception as e:
-    print(f"❌ PDF generation failed: {e}")
-
-print(f"\n✅ All searches complete. Results saved to:\n- {output_txt}\n- {output_html}\n- {output_pdf}")
+if __name__ == "__main__":
+    main()
