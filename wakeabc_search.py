@@ -1,97 +1,104 @@
-import csv
 import os
-from fpdf import FPDF
+import csv
 from datetime import datetime
+from fpdf import FPDF
 
+# Constants
+CURRENT_CSV = "current_inventory.csv"
+PREVIOUS_CSV = "previous_inventory.csv"
 TXT_OUTPUT = "search_results.txt"
 HTML_OUTPUT = "search_results.html"
 PDF_OUTPUT = "bourbon_report.pdf"
-CURRENT_CSV = "current_inventory.csv"
-PREVIOUS_CSV = "previous_inventory.csv"
-FONT_PATH = "DejaVuSans.ttf"
-FONT_NAME = "DejaVu"
 
-def run_bourbon_search():
-    # Simulated data for testing
+def mock_bourbon_search():
+    # Replace with actual scraping logic as needed
     return [
-        {"name": "Eagle Rare", "price": "34.95", "inventory": 15},
-        {"name": "Blanton's", "price": "64.95", "inventory": 8},
-        {"name": "Elmer T. Lee", "price": "39.95", "inventory": 0}
+        {"name": "E.H. Taylor Small Batch", "location": "Garner", "stock": 12},
+        {"name": "Blanton's", "location": "Raleigh", "stock": 8},
+        {"name": "Elijah Craig Barrel Proof", "location": "Cary", "stock": 5},
     ]
 
-def save_to_csv(filename, data):
-    with open(filename, "w", newline='', encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=["name", "price", "inventory"])
+def save_inventory_to_csv(data, filename):
+    with open(filename, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=["name", "location", "stock"])
         writer.writeheader()
         writer.writerows(data)
 
-def load_csv(filename):
+def load_inventory_from_csv(filename):
     if not os.path.exists(filename):
         return []
-    with open(filename, newline='', encoding="utf-8") as f:
+    with open(filename, "r") as f:
         reader = csv.DictReader(f)
-        return list(reader)
+        return [row for row in reader]
 
-def compute_delta(current, previous):
-    current_names = {item['name'] for item in current}
-    previous_names = {item['name'] for item in previous}
+def compare_inventories(old, new):
+    old_set = {(item["name"], item["location"]) for item in old}
+    new_set = {(item["name"], item["location"]) for item in new}
+    added = new_set - old_set
+    removed = old_set - new_set
+    return list(added), list(removed)
 
-    added = current_names - previous_names
-    removed = previous_names - current_names
+def generate_delta_text(added, removed):
+    lines = []
+    if added:
+        lines.append("📈 Items Added Since Last Report:")
+        for name, location in added:
+            lines.append(f"  - {name} at {location}")
+    if removed:
+        lines.append("\n📉 Items No Longer in Stock:")
+        for name, location in removed:
+            lines.append(f"  - {name} at {location}")
+    if not added and not removed:
+        lines.append("No inventory changes since the last report.")
+    return "\n".join(lines)
 
-    added_items = [item for item in current if item['name'] in added]
-    removed_items = [item for item in previous if item['name'] in removed]
+def generate_inventory_text(data):
+    lines = ["\n📦 Current Inventory:"]
+    for item in data:
+        lines.append(f"  - {item['name']} ({item['stock']} in stock at {item['location']})")
+    return "\n".join(lines)
 
-    return added_items, removed_items
-
-def format_inventory_text(data):
-    return "\n".join(
-        f"- {item['name']} | ${item['price']} | Inventory: {item['inventory']}"
-        for item in data
-    )
-
-def save_txt(filename, delta_text, inventory_text):
-    with open(filename, "w", encoding="utf-8") as f:
+def save_txt(delta_text, inventory_text):
+    with open(TXT_OUTPUT, "w") as f:
         f.write(delta_text + "\n\n" + inventory_text)
 
-def save_html(filename, delta_text, inventory_text):
-    with open(filename, "w", encoding="utf-8") as f:
+def save_html(delta_text, inventory_text):
+    with open(HTML_OUTPUT, "w") as f:
         f.write("<html><body>")
-        f.write(f"<h2>Delta Report</h2><pre>{delta_text}</pre>")
-        f.write(f"<h2>Current Inventory</h2><pre>{inventory_text}</pre>")
+        f.write("<h2>Delta Since Last Report</h2>")
+        f.write(f"<pre>{delta_text}</pre>")
+        f.write("<h2>Current Inventory</h2>")
+        f.write(f"<pre>{inventory_text}</pre>")
         f.write("</body></html>")
 
 def save_pdf(delta_text, inventory_text):
     pdf = FPDF()
     pdf.add_page()
-    pdf.add_font(FONT_NAME, '', FONT_PATH, uni=True)
-    pdf.set_font(FONT_NAME, '', 12)
+    pdf.set_font("Helvetica", size=12)
     pdf.multi_cell(0, 10, delta_text + "\n\n" + inventory_text)
     pdf.output(PDF_OUTPUT)
 
 def main():
     print("🔍 Running bourbon inventory search...")
-    current_inventory = run_bourbon_search()
-    previous_inventory = load_csv(PREVIOUS_CSV)
 
-    save_to_csv(CURRENT_CSV, current_inventory)
-    added, removed = compute_delta(current_inventory, previous_inventory)
+    new_inventory = mock_bourbon_search()
+    save_inventory_to_csv(new_inventory, CURRENT_CSV)
 
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    delta_text = f"🕒 Report Generated: {timestamp}\n"
-    delta_text += "\n📈 Items Added:\n" + ("\n".join(f"- {item['name']}" for item in added) or "None")
-    delta_text += "\n\n📉 Items Removed:\n" + ("\n".join(f"- {item['name']}" for item in removed) or "None")
+    old_inventory = load_inventory_from_csv(PREVIOUS_CSV)
+    added, removed = compare_inventories(old_inventory, new_inventory)
 
-    inventory_text = format_inventory_text(current_inventory)
+    delta_text = generate_delta_text(added, removed)
+    inventory_text = generate_inventory_text(new_inventory)
 
-    save_txt(TXT_OUTPUT, delta_text, inventory_text)
-    save_html(HTML_OUTPUT, delta_text, inventory_text)
+    save_txt(delta_text, inventory_text)
+    save_html(delta_text, inventory_text)
     save_pdf(delta_text, inventory_text)
 
-    # Replace previous with current
     os.replace(CURRENT_CSV, PREVIOUS_CSV)
 
-    print(f"✅ All searches complete. Results saved to:\n- {TXT_OUTPUT}\n- {HTML_OUTPUT}\n- {PDF_OUTPUT}")
+    print("✅ Search complete. Results saved to:")
+    print(f"- {TXT_OUTPUT}\n- {HTML_OUTPUT}\n- {PDF_OUTPUT}")
 
 if __name__ == "__main__":
     main()
+
