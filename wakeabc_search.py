@@ -1,80 +1,93 @@
-import requests
-from bs4 import BeautifulSoup
+import csv
+import os
 import pdfkit
-from datetime import datetime
+from bs4 import BeautifulSoup
+import requests
+from jinja2 import Template
 
-# Define the bourbon search terms
+# Search terms
 SEARCH_TERMS = [
-    "blanton", "eh taylor", "george t stagg", "weller", "van winkle",
-    "elmer t lee", "booker", "stagg", "michter", "angels envy", "1792",
-    "four roses", "blue note", "bardstown", "old forester", "woodford"
+    "weller", "blanton", "eh taylor", "elmer", "stagg",
+    "eagle rare", "old fitz"
 ]
 
-BASE_URL = "https://www.wakeabc.com"
-SEARCH_URL = f"{BASE_URL}/search"
-
-HEADERS = {
-    "User-Agent": "Mozilla/5.0"
-}
-
+# Output files
 TXT_OUTPUT = "search_results.txt"
+CSV_OUTPUT = "current_inventory.csv"
 HTML_OUTPUT = "search_results.html"
 PDF_OUTPUT = "bourbon_report.pdf"
 
-def search_bourbon(term):
-    response = requests.get(SEARCH_URL, params={"q": term}, headers=HEADERS)
-    soup = BeautifulSoup(response.text, "html.parser")
-    results = soup.select(".product-listing .item")
+def fetch_inventory():
+    print("🔍 Running bourbon inventory search...")
+    url = "https://wakeabc.com/inventory"
+    response = requests.get(url)
+    response.raise_for_status()
+    return response.text
 
-    if not results:
-        return f"🔍 Searching for: {term}\n❌ No results found.\n"
+def parse_inventory(html, search_terms):
+    soup = BeautifulSoup(html, "html.parser")
+    inventory = []
+    for row in soup.select("tr"):
+        cols = row.find_all("td")
+        if len(cols) >= 4:
+            name = cols[0].get_text(strip=True).lower()
+            for term in search_terms:
+                if term in name:
+                    inventory.append({
+                        "name": cols[0].get_text(strip=True),
+                        "price": cols[1].get_text(strip=True),
+                        "size": cols[2].get_text(strip=True),
+                        "inventory": cols[3].get_text(strip=True),
+                    })
+                    break
+    return inventory
 
-    output = [f"🔍 Searching for: {term}"]
-    for item in results:
-        name = item.select_one(".item-title").get_text(strip=True)
-        price = item.select_one(".price").get_text(strip=True)
-        size = item.select_one(".item-size").get_text(strip=True) if item.select_one(".item-size") else "N/A"
-        inventory_info = item.select(".store-inventory .store")
+def save_txt(results, filename):
+    with open(filename, "w", encoding="utf-8") as f:
+        for item in results:
+            f.write(f"- {item['name']}\n")
+            f.write(f"  Price: {item['price']} | Size: {item['size']}\n")
+            f.write(f"  Inventory: {item['inventory']}\n\n")
 
-        output.append(f"- {name}\n  Price: {price} | Size: {size}")
+def save_csv(results, filename):
+    with open(filename, "w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=["name", "price", "size", "inventory"])
+        writer.writeheader()
+        writer.writerows(results)
 
-        if inventory_info:
-            output.append("  Locations:")
-            for store in inventory_info:
-                location = store.select_one(".store-address").get_text(" ", strip=True)
-                quantity = store.select_one(".quantity").get_text(strip=True)
-                output.append(f"    - {location}: {quantity} in stock")
-        else:
-            output.append("  Inventory: Not Available")
+def save_html(results, filename):
+    template = Template("""
+    <html>
+    <head><meta charset="utf-8"><title>Bourbon Search Results</title></head>
+    <body>
+    <h1>Bourbon Search Results</h1>
+    <ul>
+    {% for item in results %}
+        <li><strong>{{ item.name }}</strong><br>
+        Price: {{ item.price }} | Size: {{ item.size }}<br>
+        Inventory: {{ item.inventory }}</li>
+    {% endfor %}
+    </ul>
+    </body>
+    </html>
+    """)
+    html = template.render(results=results)
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write(html)
 
-    output.append("")  # newline
-    return "\n".join(output)
-
-def save_txt(content):
-    with open(TXT_OUTPUT, "w", encoding="utf-8") as f:
-        f.write(content)
-
-def save_html(content):
-    with open(HTML_OUTPUT, "w", encoding="utf-8") as f:
-        f.write(f"<pre>{content}</pre>")
-
-def save_pdf():
-    pdfkit.from_file(HTML_OUTPUT, PDF_OUTPUT)
+def save_pdf(html_file, pdf_file):
+    pdfkit.from_file(html_file, pdf_file)
 
 def main():
-    print("🔍 Running bourbon inventory search...")
-    results = [f"Bourbon Pourcast Search Results\nDate: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"]
-    results.append(f"Search Terms: {', '.join(SEARCH_TERMS)}\n")
-
-    for term in SEARCH_TERMS:
-        results.append(search_bourbon(term))
-
-    final_output = "\n".join(results)
-    save_txt(final_output)
-    save_html(final_output)
-    save_pdf()
+    html = fetch_inventory()
+    results = parse_inventory(html, SEARCH_TERMS)
+    save_txt(results, TXT_OUTPUT)
+    save_csv(results, CSV_OUTPUT)
+    save_html(results, HTML_OUTPUT)
+    save_pdf(HTML_OUTPUT, PDF_OUTPUT)
     print("✅ All searches complete. Results saved to:")
     print(f"- {TXT_OUTPUT}")
+    print(f"- {CSV_OUTPUT}")
     print(f"- {HTML_OUTPUT}")
     print(f"- {PDF_OUTPUT}")
 
