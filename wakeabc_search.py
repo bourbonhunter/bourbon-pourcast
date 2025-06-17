@@ -6,7 +6,7 @@ import pdfkit
 from datetime import datetime
 
 SEARCH_TERMS = [
-    "blanton", "eagle rare", "eh taylor", "weller", "stagg", "elmer"
+    "blanton", "old fitz", "eagle rare", "taylor", "weller", "stagg", "elmer"
 ]
 
 URL = "https://wakeabc.com/search-our-inventory/"
