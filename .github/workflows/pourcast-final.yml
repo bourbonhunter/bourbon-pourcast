@@ -1,9 +1,9 @@
-name: Bourbon Pourcast Final
+name: Bourbon Pourcast Search
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 14,22 * * *"  # Runs at 10 AM and 6 PM Eastern Time
+    - cron: "0 14,22 * * *"  # 10 AM and 6 PM Eastern
 
 jobs:
   run-search:
@@ -31,11 +31,14 @@ jobs:
       - name: Install Chrome and Chromedriver
         run: |
           sudo apt-get update
-          sudo apt-get install -y unzip xvfb libxi6 wget
+          sudo apt-get install -y unzip wget xvfb libxi6 libnss3 libxss1 libappindicator1 libindicator7 libgbm-dev
           wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
           sudo apt install -y ./google-chrome-stable_current_amd64.deb
-          CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+\.\d+')
-          CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION%%.*}")
+
+          CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+\.\d+' || echo "114.0.5735.90")
+          CHROME_MAJOR_VERSION=$(echo $CHROME_VERSION | cut -d '.' -f 1)
+          CHROMEDRIVER_VERSION=$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_MAJOR_VERSION || echo "114.0.5735.90")
+
           wget -N https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip
           unzip -o chromedriver_linux64.zip -d .
           chmod +x chromedriver
@@ -45,5 +48,5 @@ jobs:
       - name: Run Bourbon Search
         run: python wakeabc_search_with_template_selenium.py
 
-      - name: Send Email with PDF
+      - name: Send Mailgun Email
         run: python send_mailgun_email.py
