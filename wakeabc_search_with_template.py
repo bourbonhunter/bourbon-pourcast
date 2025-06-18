@@ -2,26 +2,47 @@ import requests
 from bs4 import BeautifulSoup
 import pdfkit
 from datetime import datetime
+from jinja2 import Template
 
-# Your bourbon search terms
 SEARCH_TERMS = [
     "blanton", "old fitz", "eagle rare", "taylor", "weller", "stagg", "elmer"
 ]
 
-# Target URL
 BASE_URL = "https://wakeabc.com/search-our-inventory/"
 HEADERS = {
     "User-Agent": "Mozilla/5.0"
 }
 
-# Fetch results from the Wake ABC site
+HTML_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bourbon Pourcast Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; }
+        h1 { color: #6c2e1f; }
+        h3 { color: #8b4513; }
+        ul { list-style-type: square; }
+        .no-results { color: #888; }
+        .logo { max-width: 200px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <img class="logo" src="https://bourbonpourcast.com/logo.png" alt="Bourbon Pourcast Logo">
+    <h1>Bourbon Pourcast Inventory Report</h1>
+    <p><strong>📅 Report generated:</strong> {{ timestamp }}</p>
+    {{ results_section | safe }}
+</body>
+</html>
+"""
+
 def fetch_inventory():
     results = []
     for term in SEARCH_TERMS:
         response = requests.get(BASE_URL, params={"s": term}, headers=HEADERS)
         soup = BeautifulSoup(response.text, "html.parser")
         listings = soup.select(".elementor-post")
-
         results.append(f"<h3>🔍 Searching for: {term}</h3>")
         if listings:
             results.append("<ul>")
@@ -32,36 +53,28 @@ def fetch_inventory():
                     results.append(f"<li><strong>{title.text.strip()}</strong><br>{location.text.strip()}</li>")
             results.append("</ul>")
         else:
-            results.append("<p>❌ No results found.</p>")
-    return results
+            results.append(f"<p class='no-results'>❌ No results found.</p>")
+    return "\n".join(results)
 
-# Save results as HTML, TXT, and PDF
-def save_results_as_files(html_results):
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    full_html = f"""
-    <html>
-    <head><meta charset="UTF-8"></head>
-    <body>
-        <h2>📅 Report generated: {timestamp}</h2>
-        {''.join(html_results)}
-    </body>
-    </html>
-    """
-
+def save_results_as_files(rendered_html):
     with open("search_results.html", "w", encoding="utf-8") as f:
-        f.write(full_html)
+        f.write(rendered_html)
 
+    # Strip HTML for text version
+    soup = BeautifulSoup(rendered_html, "html.parser")
     with open("search_results.txt", "w", encoding="utf-8") as f:
-        f.write(BeautifulSoup(full_html, "html.parser").get_text())
+        f.write(soup.get_text())
 
+    # Generate PDF
     pdfkit.from_file("search_results.html", "bourbon_report.pdf")
 
-# Main execution
 def main():
     print("🔍 Running bourbon inventory search...")
-    html_results = fetch_inventory()
-    save_results_as_files(html_results)
-    print("✅ All done! Results saved to .html, .txt, and .pdf")
+    results_section = fetch_inventory()
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    html = Template(HTML_TEMPLATE).render(timestamp=timestamp, results_section=results_section)
+    save_results_as_files(html)
+    print("✅ All done! Reports saved.")
 
 if __name__ == "__main__":
     main()
