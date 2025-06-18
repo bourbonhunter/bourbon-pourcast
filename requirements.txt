@@ -1,4 +1,5 @@
-requests==2.32.3
-beautifulsoup4==4.13.0
-pdfkit==1.0.0
-jinja2==3.1.3
+selenium
+jinja2
+pdfkit
+beautifulsoup4
+python-dotenv
