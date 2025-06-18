@@ -25,3 +25,4 @@
     chmod +x chromedriver
     sudo mv -f chromedriver /usr/local/bin/chromedriver
     sudo ln -sf /usr/local/bin/chromedriver /usr/bin/chromedriver
+
