@@ -1,9 +1,9 @@
-name: Run Bourbon Pourcast Search
+name: Bourbon Pourcast Final
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 14,22 * * *"  # 10 AM and 6 PM ET
+    - cron: "0 14,22 * * *"  # Runs at 10 AM and 6 PM Eastern Time
 
 jobs:
   run-search:
@@ -26,8 +26,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y wkhtmltopdf unzip xvfb libxi6 libgconf-2-4
-          sudo apt-get install -y chromium-browser chromium-chromedriver || sudo apt install -y chromium-driver
+          sudo apt-get install -y wkhtmltopdf unzip xvfb libxi6 chromium-browser chromium-chromedriver || sudo apt install -y chromium-driver
           sudo ln -sf /usr/bin/chromedriver /usr/local/bin/chromedriver
 
       - name: Install Python dependencies
@@ -35,8 +34,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run Bourbon Search (Selenium + Template)
+      - name: Run Bourbon Search Script
         run: python wakeabc_search_with_template_selenium.py
 
-      - name: Send Mailgun Email
+      - name: Send Email with PDF
         run: python send_mailgun_email.py
