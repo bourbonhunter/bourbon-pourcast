@@ -1,4 +1,4 @@
-name: Run Bourbon Pourcast Search with Template and Selenium
+name: Bourbon Pourcast Final
 
 on:
   workflow_dispatch:
@@ -21,17 +21,18 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: 3.10
 
       - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y wkhtmltopdf chromium-browser
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run Bourbon Search Script
-        run: python wakeabc_search_with_template_selenium.py
+      - name: Install wkhtmltopdf
+        run: sudo apt-get install -y wkhtmltopdf
+
+      - name: Run Bourbon Search
+        run: python wakeabc_search_with_template_selenium_fixed.py
 
       - name: Send Email with PDF
         run: python send_mailgun_email.py
