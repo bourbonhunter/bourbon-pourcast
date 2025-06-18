@@ -1,3 +1,4 @@
+requests==2.32.3
 selenium
 jinja2
 pdfkit
