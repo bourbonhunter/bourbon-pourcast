@@ -1,6 +1,5 @@
-requests==2.32.3
-selenium
-jinja2
+requests
 pdfkit
-beautifulsoup4
+jinja2
 python-dotenv
+
