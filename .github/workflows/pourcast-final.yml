@@ -1,7 +1,9 @@
-name: Bourbon Pourcast Final
+name: Run Bourbon Pourcast Search
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "0 14,22 * * *"  # 10AM and 6PM ET
 
 jobs:
   run-search:
@@ -19,7 +21,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Install dependencies
         run: |
@@ -29,8 +31,8 @@ jobs:
       - name: Install wkhtmltopdf
         run: sudo apt-get install -y wkhtmltopdf
 
-      - name: Run Bourbon Search
+      - name: Run wakeabc_search.py
         run: python wakeabc_search.py
 
-      - name: Send Email with PDF
+      - name: Send Mailgun Email
         run: python send_mailgun_email.py
