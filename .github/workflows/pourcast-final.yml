@@ -1,4 +1,4 @@
-name: Bourbon Pourcast Search
+name: Bourbon Pourcast Final
 
 on:
   workflow_dispatch:
@@ -31,7 +31,8 @@ jobs:
       - name: Install Chrome and Chromedriver
         run: |
           sudo apt-get update
-          sudo apt-get install -y unzip wget xvfb libxi6 libnss3 libxss1 libappindicator1 libindicator7 libgbm-dev
+          sudo apt-get install -y unzip wget xvfb libxi6 libnss3 libxss1 libgbm-dev
+
           wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
           sudo apt install -y ./google-chrome-stable_current_amd64.deb
 
@@ -48,5 +49,5 @@ jobs:
       - name: Run Bourbon Search
         run: python wakeabc_search_with_template_selenium.py
 
-      - name: Send Mailgun Email
+      - name: Send Mailgun Email with PDF
         run: python send_mailgun_email.py
