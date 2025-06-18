@@ -1,62 +1,27 @@
-name: Pourcast Daily Report
+- name: Install Chrome and Matching Chromedriver
+  run: |
+    sudo apt-get update
+    sudo apt-get install -y unzip wget xvfb libxi6 libnss3 libxss1 libgbm-dev
 
-on:
-  workflow_dispatch:
-  schedule:
-    - cron: '30 13,23 * * *'  # Runs at 9:30 AM and 7:30 PM Eastern
+    # Install Chrome
+    wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+    sudo apt install -y ./google-chrome-stable_current_amd64.deb
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+    # Fallback to latest Chromedriver if specific version is not found
+    CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+\.\d+')
+    CHROME_MAJOR=$(echo "$CHROME_VERSION" | cut -d '.' -f 1)
+    echo "Detected Chrome version: $CHROME_VERSION"
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_MAJOR")
+    
+    if [[ -z "$CHROMEDRIVER_VERSION" ]]; then
+      echo "⚠️  Chromedriver for $CHROME_MAJOR not found, using latest available."
+      CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE")
+    fi
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
-
-      - name: Install Chrome and Matching Chromedriver
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y unzip wget xvfb libxi6 libnss3 libxss1 libgbm-dev
-
-          wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-          sudo apt install -y ./google-chrome-stable_current_amd64.deb
-
-          CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+\.\d+')
-          CHROME_MAJOR=$(echo "$CHROME_VERSION" | cut -d '.' -f 1)
-
-          echo "Installed Chrome version: $CHROME_VERSION"
-          echo "Fetching Chromedriver for major version: $CHROME_MAJOR"
-
-          CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_MAJOR")
-
-          if [[ -z "$CHROMEDRIVER_VERSION" ]]; then
-            echo "❌ Could not determine compatible Chromedriver version."
-            exit 1
-          fi
-
-          echo "Downloading Chromedriver version: $CHROMEDRIVER_VERSION"
-          wget -O chromedriver_linux64.zip "https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip"
-          unzip -o chromedriver_linux64.zip -d .
-          chmod +x chromedriver
-          sudo mv -f chromedriver /usr/local/bin/chromedriver
-          sudo ln -sf /usr/local/bin/chromedriver /usr/bin/chromedriver
-
-      - name: Install Python dependencies
-        run: pip install -r requirements.txt
-
-      - name: Run bourbon search script
-        run: python wakeabc_search_with_template_selenium.py
-        env:
-          WAKEABC_TERMS: "blanton, old fitz, eagle rare, taylor, weller, stagg, elmer"
-
-      - name: Send results via Mailgun
-        run: python send_mailgun_email.py
-        env:
-          MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
-          MAILGUN_DOMAIN: ${{ secrets.MAILGUN_DOMAIN }}
-          ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
+    echo "Using Chromedriver version: $CHROMEDRIVER_VERSION"
+    wget -O chromedriver_linux64.zip "https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip"
+    unzip -o chromedriver_linux64.zip -d .
+    chmod +x chromedriver
+    sudo mv -f chromedriver /usr/local/bin/chromedriver
+    sudo ln -sf /usr/local/bin/chromedriver /usr/bin/chromedriver
