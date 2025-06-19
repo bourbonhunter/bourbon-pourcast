@@ -18,11 +18,11 @@ search_terms = [
 output_txt = "search_results.txt"
 output_html = "search_results.html"
 output_pdf = "bourbon_report.pdf"
-today = "Dumped On: " + datetime.now().strftime("%B %d, %Y")
+today = current_time = datetime.now().strftime("%I:%M %p")
 
 # Clear previous output
 with open(output_txt, "w", encoding="utf-8") as f:
-    f.write("Wake County Bourbon Pourcast\n" + "=" * 40 + "\n\n")
+    f.write("Bourbon Pourcast\n" + "=" * 40 + "\n\n")
 
 with open(output_html, "w", encoding="utf-8") as f:
     f.write(f"""<!DOCTYPE html>
@@ -80,7 +80,11 @@ with open(output_html, "w", encoding="utf-8") as f:
   <header>
     <div>
       <h1>Wake County, NC Pourcast</h1>
-      <p class="date"><em>{today}</em></p>
+      <p class="date">
+        <em>Dumped On: {today}</em><br>
+        <em>County: Wake</em><br>
+        <em>Time: {datetime.now().strftime("%I:%M %p")}</em>
+      </p>
     </div>
     <img src="logo.png" alt="Pour Decisions Logo" style="height: 120px; margin-left: 40px; border-radius: 6px;" />
   </header>
