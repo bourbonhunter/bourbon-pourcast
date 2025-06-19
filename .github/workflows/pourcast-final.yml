@@ -1,32 +1,33 @@
-name: Pour Decisions Pourcast
+name: WakeABC Bourbon Search
 
 on:
-  workflow_dispatch:
   schedule:
-    - cron: "30 13,23 * * *"  # Runs daily at 9:30AM and 7:30PM Eastern
+    - cron: "0 13,23 * * *"  # Runs at 9am and 7pm ET
+  workflow_dispatch:         # Allows manual triggering
 
 jobs:
-  run-search:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - name: 📥 Checkout code
+        uses: actions/checkout@v3
 
-      - name: Set up Python "3.10"
+      - name: 🐍 Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
 
-      - name: Install dependencies
+      - name: 📦 Install dependencies
         run: |
-          python -m pip install --upgrade pip
+          sudo apt-get update
+          sudo apt-get install -y wkhtmltopdf
           pip install -r requirements.txt
 
-      - name: Run WakeABC search
+      - name: 🧪 Run search script
         run: python wakeabc_search.py
 
-      - name: Send email with Mailgun
+      - name: 📤 Send email with Mailgun
         run: python send_mailgun_email.py
         env:
           MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
