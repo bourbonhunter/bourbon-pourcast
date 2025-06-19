@@ -1,4 +1,5 @@
 
+from zoneinfo import ZoneInfo
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -9,6 +10,7 @@ import time
 import traceback
 import os
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import pdfkit
 
 search_terms = [
@@ -18,7 +20,8 @@ search_terms = [
 output_txt = "search_results.txt"
 output_html = "search_results.html"
 output_pdf = "bourbon_report.pdf"
-today = current_time = datetime.now().strftime("%I:%M %p")
+today = datetime.now(ZoneInfo("America/New_York")).strftime("%B %d, %Y")
+current_time = datetime.now(ZoneInfo("America/New_York")).strftime("%I:%M %p EDT")
 
 # Clear previous output
 with open(output_txt, "w", encoding="utf-8") as f:
@@ -29,7 +32,7 @@ with open(output_html, "w", encoding="utf-8") as f:
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Wake County Bournon Pourcast</title>
+  <title>Bournon Pourcast</title>
   <style>
     body {{
       background-color: white;
