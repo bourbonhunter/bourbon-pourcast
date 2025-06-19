@@ -5,7 +5,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import time
+import pytz
 import traceback
 import os
 from datetime import datetime
@@ -19,8 +19,11 @@ search_terms = [
 output_txt = "search_results.txt"
 output_html = "search_results.html"
 output_pdf = "bourbon_report.pdf"
-today = datetime.now(ZoneInfo("America/New_York")).strftime("%B %d, %Y")
-current_time = datetime.now(ZoneInfo("America/New_York")).strftime("%I:%M %p %Z")
+eastern = pytz.timezone("US/Eastern")
+now = datetime.now(eastern)
+today = now.strftime("%B %d, %Y")
+current_time = now.strftime("%I:%M %p %Z")
+
 
 
 # Clear previous output
@@ -32,7 +35,7 @@ with open(output_html, "w", encoding="utf-8") as f:
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Bournon Pourcast</title>
+  <title>Bourbon Pourcast</title>
   <style>
     body {{
       background-color: white;
@@ -82,7 +85,7 @@ with open(output_html, "w", encoding="utf-8") as f:
 <body>
   <header>
     <div>
-      <h1>Wake County, NC Pourcast</h1>
+      <h1>Bourbon Pourcast</h1>
       <p class="date">
         <em>Dumped On: {today}</em><br>
         <em>County: Wake</em><br>
