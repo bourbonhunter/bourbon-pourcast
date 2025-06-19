@@ -1,4 +1,5 @@
 requests
+beautifulsoup4
 pdfkit
 jinja2
 python-dotenv
