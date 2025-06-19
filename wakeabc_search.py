@@ -12,9 +12,7 @@ from datetime import datetime
 import pdfkit
 
 search_terms = [
-    "Old Fitz", "Blanton", "Eagle Rare", "stagg", "Van Winkle",
-    "king of kentucky", "parkers", "elmer", "taylor", "weller",
-    "old forester", "michter", "blue note"
+    "Old Fitz", "Blanton", "Eagle Rare", "stagg", "Van Winkle", "parkers", "elmer", "taylor", "weller",
 ]
 
 output_txt = "search_results.txt"
@@ -37,8 +35,8 @@ with open(output_html, "w", encoding="utf-8") as f:
       background-color: white;
       color: #333;
       font-family: Arial, sans-serif;
-      font-size: 20px;
-      padding: 20px;
+      font-size: 12px;
+      padding: 12px;
     }}
     h1, h2 {{
       color: #7B3F00;
