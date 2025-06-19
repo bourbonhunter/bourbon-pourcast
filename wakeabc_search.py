@@ -20,7 +20,8 @@ output_txt = "search_results.txt"
 output_html = "search_results.html"
 output_pdf = "bourbon_report.pdf"
 today = datetime.now(ZoneInfo("America/New_York")).strftime("%B %d, %Y")
-current_time = datetime.now(ZoneInfo("America/New_York")).strftime("%I:%M %p EDT")
+current_time = datetime.now(ZoneInfo("America/New_York")).strftime("%I:%M %p %Z")
+
 
 # Clear previous output
 with open(output_txt, "w", encoding="utf-8") as f:
