@@ -18,7 +18,7 @@ search_terms = [
 output_txt = "search_results.txt"
 output_html = "search_results.html"
 output_pdf = "bourbon_report.pdf"
-today = datetime.now().strftime("%B %d, %Y")
+today = "Dumped On: " + datetime.now().strftime("%B %d, %Y")
 
 # Clear previous output
 with open(output_txt, "w", encoding="utf-8") as f:
@@ -80,7 +80,7 @@ with open(output_html, "w", encoding="utf-8") as f:
   <header>
     <div>
       <h1>Wake County, NC Pourcast</h1>
-      <p class="dump date"><em>{today}</em></p>
+      <p class="date"><em>{today}</em></p>
     </div>
     <img src="logo.png" alt="Pour Decisions Logo" style="height: 120px; margin-left: 40px; border-radius: 6px;" />
   </header>
