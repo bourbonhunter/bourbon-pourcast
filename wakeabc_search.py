@@ -12,7 +12,7 @@ from datetime import datetime
 import pdfkit
 
 search_terms = [
-    "Old Fitz", "Blanton", "Eagle Rare", "stagg", "Van Winkle", "parkers", "elmer", "taylor", "weller",
+    "Old Fitzgerald", "Blantons", "Eagle Rare", "Stagg", "Van Winkle", "Parkers", "Elmer", "Taylor", "Weller",
 ]
 
 output_txt = "search_results.txt"
@@ -22,14 +22,14 @@ today = datetime.now().strftime("%B %d, %Y")
 
 # Clear previous output
 with open(output_txt, "w", encoding="utf-8") as f:
-    f.write("Pour Decisions Pourcast\n" + "=" * 40 + "\n\n")
+    f.write("Wake County Bourbon Pourcast\n" + "=" * 40 + "\n\n")
 
 with open(output_html, "w", encoding="utf-8") as f:
     f.write(f"""<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Pour Decisions Pourcast</title>
+  <title>Wake County Bournon Pourcast</title>
   <style>
     body {{
       background-color: white;
@@ -79,8 +79,8 @@ with open(output_html, "w", encoding="utf-8") as f:
 <body>
   <header>
     <div>
-      <h1>Pour Decisions Pourcast</h1>
-      <p class="date"><em>{today}</em></p>
+      <h1>Wake County, NC Pourcast</h1>
+      <p class="dump date"><em>{today}</em></p>
     </div>
     <img src="logo.png" alt="Pour Decisions Logo" style="height: 120px; margin-left: 40px; border-radius: 6px;" />
   </header>
