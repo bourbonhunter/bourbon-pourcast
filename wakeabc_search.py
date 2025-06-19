@@ -14,9 +14,7 @@ import pdfkit
 from send_mailgun_email import send_email_with_attachment
 
 search_terms = [
-    "Old Fitz", "Blanton", "Eagle Rare", "stagg", "Van Winkle",
-    "king of kentucky", "parkers", "elmer", "taylor", "weller",
-    "old forester", "michter", "blue note"
+    "Old Fitz", "Blanton", "Eagle Rare", "stagg", "Van Winkle", "parkers", "elmer", "taylor", "weller",
 ]
 
 output_txt = "search_results.txt"
