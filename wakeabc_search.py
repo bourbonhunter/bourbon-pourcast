@@ -24,8 +24,6 @@ now = datetime.now(eastern)
 today = now.strftime("%B %d, %Y")
 current_time = now.strftime("%I:%M %p %Z")
 
-
-
 # Clear previous output
 with open(output_txt, "w", encoding="utf-8") as f:
     f.write("Bourbon Pourcast\n" + "=" * 40 + "\n\n")
