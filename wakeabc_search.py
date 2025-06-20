@@ -5,7 +5,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import pytz
+import time
 import traceback
 import os
 from datetime import datetime
@@ -19,10 +19,10 @@ search_terms = [
 output_txt = "search_results.txt"
 output_html = "search_results.html"
 output_pdf = "bourbon_report.pdf"
-eastern = pytz.timezone("US/Eastern")
-now = datetime.now(eastern)
-today = now.strftime("%B %d, %Y")
-current_time = now.strftime("%I:%M %p %Z")
+today = datetime.now(ZoneInfo("America/New_York")).strftime("%B %d, %Y")
+current_time = datetime.now(ZoneInfo("America/New_York")).strftime("%I:%M %p EDT")
+
+
 
 # Clear previous output
 with open(output_txt, "w", encoding="utf-8") as f:
