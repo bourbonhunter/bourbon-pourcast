@@ -22,10 +22,10 @@ output_pdf = "bourbon_report.pdf"
 
 # ✅ Correct timezone handling for Eastern Time
 eastern = pytz.timezone("America/New_York")
-now_utc = datetime.utcnow()
-now_eastern = eastern.localize(now_utc).astimezone(eastern)
+now_eastern = datetime.now(eastern)
 today = now_eastern.strftime("%B %d, %Y")
 current_time = now_eastern.strftime("%I:%M %p")
+
 
 
 # today = datetime.now(ZoneInfo("America/New_York")).strftime("%B %d, %Y")
