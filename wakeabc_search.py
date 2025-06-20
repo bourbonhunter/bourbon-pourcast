@@ -52,7 +52,6 @@ output_pdf = "bourbon_report.pdf"
 # Clear previous output
 with open(output_txt, "w", encoding="utf-8") as f:
     f.write("Bourbon Pourcast\n" + "=" * 40 + "\n\n")
-
 with open(output_html, "w", encoding="utf-8") as f:
     f.write(f"""<!DOCTYPE html>
 <html>
@@ -81,6 +80,28 @@ with open(output_html, "w", encoding="utf-8") as f:
       align-items: center;
       margin-bottom: 20px;
     }}
+    table {{
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 30px;
+    }}
+    th, td {{
+      border: 1px solid #ccc;
+      padding: 8px 12px;
+      text-align: left;
+      vertical-align: top;
+    }}
+    th {{
+      background-color: #e2cdb6;
+      color: #5A2600;
+    }}
+    ul {{
+      margin: 0;
+      padding-left: 18px;
+    }}
+    li {{
+      margin-bottom: 4px;
+    }}
   </style>
 </head>
 <body>
@@ -96,9 +117,6 @@ with open(output_html, "w", encoding="utf-8") as f:
     <img src="logo.png" alt="Pour Decisions Logo" style="height: 160px; float: right; margin-left: 60px; border-radius: 6px;" />
   </header>
 """)
-
-
-
 for term in search_terms:
     options = Options()
     options.add_argument("--headless")
