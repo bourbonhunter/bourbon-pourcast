@@ -20,17 +20,23 @@ output_txt = "search_results.txt"
 output_html = "search_results.html"
 output_pdf = "bourbon_report.pdf"
 
-# ✅ Correct timezone handling for Eastern Time
+# ✅ Correct timezone handling for Eastern Time (EDT/EST) even on UTC-only systems like GitHub Actions
 eastern = pytz.timezone("America/New_York")
-now_eastern = datetime.now(eastern)
+now_utc = datetime.utcnow()
+now_eastern = pytz.utc.localize(now_utc).astimezone(eastern)
 today = now_eastern.strftime("%B %d, %Y")
 current_time = now_eastern.strftime("%I:%M %p")
 
 
 
+# ✅ Correct timezone handling for Eastern Time
+# eastern = pytz.timezone("America/New_York")
+# now_eastern = datetime.now(eastern)
+# today = now_eastern.strftime("%B %d, %Y")
+# current_time = now_eastern.strftime("%I:%M %p")
+
 # today = datetime.now(ZoneInfo("America/New_York")).strftime("%B %d, %Y")
 # current_time = datetime.now(ZoneInfo("America/New_York")).strftime("%I:%M %p EDT")
-
 
 
 # Clear previous output
