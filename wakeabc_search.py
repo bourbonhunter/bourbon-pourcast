@@ -20,11 +20,12 @@ output_txt = "search_results.txt"
 output_html = "search_results.html"
 output_pdf = "bourbon_report.pdf"
 
-# ✅ Force Eastern Daylight Time (UTC−4) manually
-now_utc = datetime.utcnow()
-now_eastern = now_utc - timedelta(hours=4)  # Assumes it's currently EDT
-today = now_eastern.strftime("%B %d, %Y")
-current_time = now_eastern.strftime("%I:%M %p")
+# ✅ GitHub Actions runs in UTC, manually convert to EDT (UTC−4)
+utc_now = datetime.utcnow()
+edt_now = utc_now - timedelta(hours=4)
+today = edt_now.strftime("%B %d, %Y")
+current_time = edt_now.strftime("%I:%M %p")
+
 
 # ✅ Correct timezone handling for Eastern Time
 # eastern = pytz.timezone("America/New_York")
