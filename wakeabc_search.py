@@ -90,7 +90,7 @@ with open(output_html, "w", encoding="utf-8") as f:
         <em>Time: {datetime.now().strftime("%I:%M %p")}</em>
       </p>
     </div>
-    <img src="logo.png" alt="Pour Decisions Logo" style="height: 120px; margin-left: 40px; border-radius: 6px;" />
+    <img src="logo.png" alt="Pour Decisions Logo" style="height: 120px; margin-left: 600px; border-radius: 6px;" />
   </header>
 """)
 
