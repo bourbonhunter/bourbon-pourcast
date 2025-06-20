@@ -57,17 +57,17 @@ with open(output_html, "w", encoding="utf-8") as f:
     f.write(f"""<!DOCTYPE html>
 <html>
 <head>
+  <title>Pour Decisions Pourcast</title>
   <meta charset="UTF-8">
-  <title>Bourbon Pourcast</title>
   <style>
     body {{
       background-color: white;
       color: #333;
       font-family: Arial, sans-serif;
-      font-size: 12px;
-      padding: 12px;
+      font-size: 20px;
+      padding: 20px;
     }}
-    h1, h2 {{
+    h1 {{
       color: #7B3F00;
     }}
     .date {{
@@ -81,48 +81,23 @@ with open(output_html, "w", encoding="utf-8") as f:
       align-items: center;
       margin-bottom: 20px;
     }}
-    table {{
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 30px;
-    }}
-    th, td {{
-      border: 1px solid #ccc;
-      padding: 8px 12px;
-      text-align: left;
-      vertical-align: top;
-    }}
-    th {{
-      background-color: #e2cdb6;
-      color: #5A2600;
-    }}
-    ul {{
-      margin: 0;
-      padding-left: 18px;
-    }}
-    li {{
-      margin-bottom: 4px;
-    }}
   </style>
 </head>
 <body>
   <header>
     <div>
       <h1>Bourbon Pourcast</h1>
-      f"""
       <p class="date">
         <em>Dumped On: {today}</em><br>
         <em>County: Wake</em><br>
-        <em>Time: {datetime.now().strftime("%I:%M %p")}</em>
+        <em>Time: {current_time}</em>
       </p>
-      """
-
     </div>
-    <img src="logo.png" alt="Pour Decisions Logo" style="height: 160px; float: right; margin-left: 100px; border-radius: 6px;" />
-        />
-    
+    <img src="logo.png" alt="Pour Decisions Logo" style="height: 160px; float: right; margin-left: 60px; border-radius: 6px;" />
   </header>
 """)
+
+
 
 for term in search_terms:
     options = Options()
