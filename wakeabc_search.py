@@ -1,4 +1,5 @@
 
+import pytz
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -19,8 +20,16 @@ search_terms = [
 output_txt = "search_results.txt"
 output_html = "search_results.html"
 output_pdf = "bourbon_report.pdf"
-today = datetime.now(ZoneInfo("America/New_York")).strftime("%B %d, %Y")
-current_time = datetime.now(ZoneInfo("America/New_York")).strftime("%I:%M %p EDT")
+eastern = pytz.timezone("America/New_York")
+now_eastern = datetime.now(eastern)
+today = now_eastern.strftime("%B %d, %Y")
+current_time = now_eastern.strftime("%I:%M %p")
+
+
+
+
+# today = datetime.now(ZoneInfo("America/New_York")).strftime("%B %d, %Y")
+# current_time = datetime.now(ZoneInfo("America/New_York")).strftime("%I:%M %p EDT")
 
 
 
