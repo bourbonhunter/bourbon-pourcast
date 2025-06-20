@@ -10,6 +10,18 @@ import time
 import traceback
 import os
 from datetime import datetime, timedelta
+# Manually convert UTC to US Eastern Time (EDT/EST)
+from datetime import datetime, timedelta
+
+# Get current UTC time
+utc_now = datetime.utcnow()
+
+# GitHub runners don't support full tz conversion reliably; assume EDT = UTC - 4 hours
+edt_offset = timedelta(hours=-4)
+now_eastern = utc_now + edt_offset
+
+today = now_eastern.strftime("%B %d, %Y")
+current_time = now_eastern.strftime("%I:%M %p")
 import pdfkit
 
 search_terms = [
@@ -21,10 +33,10 @@ output_html = "search_results.html"
 output_pdf = "bourbon_report.pdf"
 
 # ✅ GitHub Actions runs in UTC, manually convert to EDT (UTC−4)
-utc_now = datetime.utcnow()
-edt_now = utc_now - timedelta(hours=4)
-today = edt_now.strftime("%B %d, %Y")
-current_time = edt_now.strftime("%I:%M %p")
+# utc_now = datetime.utcnow()
+# edt_now = utc_now - timedelta(hours=4)
+# today = edt_now.strftime("%B %d, %Y")
+# current_time = edt_now.strftime("%I:%M %p")
 
 
 # ✅ Correct timezone handling for Eastern Time
@@ -97,11 +109,14 @@ with open(output_html, "w", encoding="utf-8") as f:
   <header>
     <div>
       <h1>Bourbon Pourcast</h1>
+      f"""
       <p class="date">
         <em>Dumped On: {today}</em><br>
         <em>County: Wake</em><br>
         <em>Time: {datetime.now().strftime("%I:%M %p")}</em>
       </p>
+      """
+
     </div>
     <img src="logo.png" alt="Pour Decisions Logo" style="height: 160px; float: right; margin-left: 100px; border-radius: 6px;" />
         />
