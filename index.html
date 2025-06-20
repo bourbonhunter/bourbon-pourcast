@@ -5,82 +5,88 @@
   <title>Bourbon Pourcast</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-image: url('https://img1.wsimg.com/isteam/getty/2199923319');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    background-repeat: no-repeat;
-    color: #fff;
-    text-shadow: 1px 1px 3px #000;
-  }
+      margin: 0;
+      padding: 0;
+      font-family: "Georgia", serif;
+      background: url('background.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #fff;
+      text-shadow: 1px 1px 2px #000;
+    }
 
-  header {
-    text-align: center;
-    padding: 60px 20px 30px;
-    background-color: rgba(0, 0, 0, 0.6);
-  }
+    .container {
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 40px;
+      max-width: 800px;
+      margin: 60px auto;
+      border-radius: 12px;
+    }
 
-  .container {
-    max-width: 300px;
-    margin: 0 auto;
-    padding: 20px;
-    background-color: rgba(0, 0, 0, 0.5);
-    border-radius: 8px;
-  }
+    h1 {
+      text-align: center;
+      font-size: 3em;
+      margin-bottom: 0.4em;
+    }
 
-  h1, h2 {
-    color: #f0d9b5;
-  }
+    h2 {
+      border-bottom: 1px solid #fff;
+      padding-bottom: 5px;
+      margin-top: 30px;
+    }
 
-  a {
-    color: #ffcc66;
-  }
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
 
-  a:hover {
-    color: #ffffff;
-  }
- 
+    li {
+      margin: 10px 0;
+    }
+
+    a {
+      color: #f4cf86;
+      font-weight: bold;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      font-size: 0.9em;
+      color: #ccc;
+    }
   </style>
 </head>
 <body>
+  <div class="container">
+    <h1>Bourbon Pourcast</h1>
 
-  <div class="logo">
-    <img src="logo.png" alt="Bourbon Pourcast Logo">
+    <div class="section">
+      <h2>Current Pourcasts</h2>
+      <ul>
+        <li><a href="bourbon_report.pdf" target="_blank">Wake County Daily</a></li>
+        <li><a href="https://www.cumberlandabc.com/_files/ugd/d739c5_1b3d2944fef8468bb60ab94ae7dcc451.pdf" target="_blank">Cumberland County Drop Report</a></li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>Coming Soon</h2>
+      <ul>
+        <li>Drop Dates</li>
+        <li>Favorite Stores</li>
+        <li>Top Searches</li>
+        <li>Barrel Finds</li>
+      </ul>
+    </div>
+
+    <div class="footer">
+      &copy; 2025 Bourbon Pourcast
+    </div>
   </div>
-
-  <h1>Bourbon Pourcast</h1>
-
-  <div class="section">
-    <h2>Current Pourcasts</h2>
-    <ul>
-      <li><a href="bourbon_report.pdf" target="_blank">Wake County Daily</a></li>
-      <li><a href="https://www.cumberlandabc.com/_files/ugd/d739c5_1b3d2944fef8468bb60ab94ae7dcc451.pdf" target="_blank">Cumberland County Drop Report</a></li>
-    </ul>
-  </div>
-
-  
-  <div class="section">
-    <h2>Drop Dates</h2>
-    <p class="coming-soon">Tracking recent ABC drops across North Carolina (Coming Soon)</p>
-  </div>
-
-  <div class="section">
-    <h2>Favorite Stores</h2>
-    <p class="coming-soon">See which ABC stores have the best track record (Coming Soon)</p>
-  </div>
-
-  <div class="section">
-    <h2>Top Searches</h2>
-    <p class="coming-soon">Bourbons our users are hunting the most (Coming Soon)</p>
-  </div>
-
-  <div class="section">
-    <h2>Barrel Finds</h2>
-    <p class="coming-soon">Private barrel picks worth chasing (Coming Soon)</p>
-  </div>
-
 </body>
 </html>
+
