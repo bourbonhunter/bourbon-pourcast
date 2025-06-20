@@ -10,7 +10,6 @@ import time
 import traceback
 import os
 from datetime import datetime
-from zoneinfo import ZoneInfo
 import pdfkit
 
 search_terms = [
@@ -20,12 +19,13 @@ search_terms = [
 output_txt = "search_results.txt"
 output_html = "search_results.html"
 output_pdf = "bourbon_report.pdf"
+
+# ✅ Correct timezone handling for Eastern Time
 eastern = pytz.timezone("America/New_York")
-now_eastern = datetime.now(eastern)
+now_utc = datetime.utcnow()
+now_eastern = eastern.localize(now_utc).astimezone(eastern)
 today = now_eastern.strftime("%B %d, %Y")
 current_time = now_eastern.strftime("%I:%M %p")
-
-
 
 
 # today = datetime.now(ZoneInfo("America/New_York")).strftime("%B %d, %Y")
