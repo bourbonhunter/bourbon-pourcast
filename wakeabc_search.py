@@ -63,8 +63,8 @@ with open(output_html, "w", encoding="utf-8") as f:
       background-color: white;
       color: #333;
       font-family: Arial, sans-serif;
-      font-size: 20px;
-      padding: 20px;
+      font-size: 12px;
+      padding: 12px;
     }}
     h1 {{
       color: #7B3F00;
